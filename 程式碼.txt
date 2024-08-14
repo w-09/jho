@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Page</title>
+    <style>
+       body {
+             background-image: url('https://i.postimg.cc/r0ZFRVz3/58c39104.jpg');
+             background-size: 10%; /* 調整背景圖片大小，這裡設置為 70% */
+             background-position: center; /* 將背景圖片置中 */
+             background-repeat: no-repeat; /* 禁止背景圖片重複 */
+             background-attachment: fixed; /* 設置背景圖片固定滾動 */
+             font-family: Arial, sans-serif; /* 設置字體 */
+             color: #ffffff; /* 設置文字顏色為白色 */
+             text-align: center; /* 將文字居中 */
+             padding-top: 50px; /* 留出一些上邊距 */
+             margin: 0; /* 去除默認的頁面邊距 */
+    filter: brightness(100%); /* 調整背景圖片的亮度為100% */
+        }
+        .center-image {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        .btn-container {
+    display: flex;
+    justify-content: space-around; /* 将子元素平均分布在容器内 */
+    gap: 20px; /* 元素之间的间距 */
+    padding: 20px;
+    max-width: 75%; /* 让容器宽度填满父元素 */
+    margin: 0 auto;
+}
+
+.btn-group {
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明黑色背景 */
+    padding: 20px;
+    border-radius: 10px;
+    flex: 1; /* 让每个 .btn-group 元素均分剩余空间 */
+    text-align: left; /* 文字左对齐 */
+}
+
+.btn {
+    display: block;
+    padding: 25px 45px;
+    background-color: #4d4d4d;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 18px;
+    margin-bottom: 15px;
+    width: 75%; /* 按钮宽度填满 .btn-group 的宽度 */
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #999999;
+}
+h1 {
+            color: #5e5e5eb2; /* 紅色文字 */
+            font-family: Arial, sans-serif; /* 設置字體 */
+        }
+        
+    </style>
+</head>
+<body>
+    <img src="https://i.postimg.cc/ZKWfsQD9/Logo-02-0.png" alt="Logo" class="center-image">
+                      <h1>  歡 迎 光 臨，亞 灣 工 務 所</h1>
+
+    <!-- 按鈕列表 -->
+    <div class="btn-container">
+        <div class="btn-group">
+            <p style="color: #ffffff; font-size: 18px; margin-bottom: 10px;">施工組</p>
+            <a href="https://docs.google.com/spreadsheets/d/1cFh5zbm7qRwwqE9uGD0G3NdVLMhaSO5DgWd1y687wwo/edit?gid=0#gid=0" class="btn">施工每日日報</a>
+            <a href="https://docs.google.com/spreadsheets/d/1BxXg5jEgVMVnT5uBZGIEUoEs7GHX90Aent1j9mCZWD8/edit?gid=0#gid=0" class="btn">施工自主查驗</a>
+            <a href="https://docs.google.com/spreadsheets/d/1JaZEKyh_M6bWk_I3p-jWH1cL6htITDyfzwwzSb3mbcc/edit?gid=442371140#gid=442371140" class="btn">混凝土澆置統計</a>
+            <a href="https://docs.google.com/spreadsheets/d/1LtNOr7zsmdIlIMaf4jUn77W6LCdlxh3rcCXPcvXafkw/edit?gid=0#gid=0" class="btn">缺失改善紀錄</a>
+            <a href="https://docs.google.com/spreadsheets/d/1QP7HbrNo5MCdGsvQsY1hUy2ufkkg3hwsgfDL917FkBo/edit?gid=0#gid=0" class="btn">施工進度取線圖</a>
+            <a href="https://docs.google.com/spreadsheets/d/1N1pH0JsXPeAJ4u7uWf2GrkiDlnYBuXcsDPe2ubIqAGQ/edit?resourcekey=&gid=193692739#gid=193692739" class="btn">每日施工回報表</a>
+            <a href="https://forms.gle/TYd2EZavsdamusm68" class="btn">"<表單>"每日進場人數回報</a>
+            <a href="https://forms.gle/HuTst3qd78uidRfB8" class="btn">"<表單>"每日施工回報
+            </a>
+        </div>
+        <div class="btn-group">
+            <p style="color: #ffffff; font-size: 18px; margin-bottom: 10px;">品管組</p>
+            <a href="https://docs.google.com/spreadsheets/d/13dLwyMfSB_O8V2oHDqnUeV__RnNFalBGPllYWnyXaPw/edit?gid=0#gid=0" class="btn">混凝土澆置時間紀錄</a>
+            <a href="https://docs.google.com/spreadsheets/d/1ymHlbXo8yzJ8XCd9djMdBSwjwIqwsGdUfdDd4OE8nio/edit?gid=281744822#gid=281744822" class="btn">收/發文紀錄</a>
+            <a href="https://docs.google.com/spreadsheets/d/13Zf7l9bKjapzaQGxyRAc-qeVmdWNmFhGxPd2ziPnEJw/edit?gid=0#gid=0" class="btn">工程相關人員督導紀錄</a>
+            <a href="https://docs.google.com/spreadsheets/d/1i1TBepz7SEm0KRRCbRYntfTcCA7ZKUgRRwDaWJ1nMqU/edit?gid=1342178985#gid=1342178985" class="btn">品管/計畫書/缺失改善</a>
+            <a href="https://docs.google.com/spreadsheets/d/1MK7jePCQ2Yjm26yTVvdctfMCOfXwiGLiSxy-LPc3ERc/edit?gid=1616629558#gid=1616629558" class="btn">材料設備統計表/申請單</a>
+        </div>
+        <div class="btn-group">
+            <p style="color: #ffffff; font-size: 18px; margin-bottom: 10px;">職安組</p>
+            <a href="" class="btn">尚未啟用</a>
+            <a href="" class="btn">尚未啟用</a>
+        </div>
+    </div>
+    <div class="btn-container">
+        <div class="btn-group">
+            <p style="color: #ffffff; font-size: 18px; margin-bottom: 10px;">稽核中心</p>
+            <a href="" class="btn">尚未啟用</a>
+            <a href="" class="btn">尚未啟用</a>
+            <a href="" class="btn">尚未啟用</a>
+            <a href="" class="btn">尚未啟用</a>
+
+        </div>
+         <div class="btn-group">
+            <p style="color: #ffffff; font-size: 18px; margin-bottom: 10px;">行政組</p>
+            <a href="https://docs.google.com/spreadsheets/d/1DZa-5tN-KdqLg9TXe-YYKJ-qjJl5MB5bF_MU0RCj_iY/edit?gid=0#gid=0" class="btn">亞灣通訊錄</a>
+            <a href="" class="btn">尚未啟用</a>
+            <a href="" class="btn">尚未啟用</a>
+            <a href="" class="btn">尚未啟用</a>
+
+
+        </div>
+        <div class="btn-group">
+            <p style="color: #ffffff; font-size: 18px; margin-bottom: 10px;">環安中心</p>
+            <a href="" class="btn">尚未啟用</a>
+            <a href="" class="btn">尚未啟用</a>
+            <a href="" class="btn">尚未啟用</a>
+            <a href="" class="btn">尚未啟用</a>
+
+
+        </div>
+    </div>
+</body>
+</html>

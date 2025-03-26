@@ -6,7 +6,6 @@
   <title>亞灣工務所公告</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
-
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -14,30 +13,7 @@
       background-color: #f4f4f4;
     }
 
-    .floating-button {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      background-color: #3e9956;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      z-index: 1000;
-      transition: all 0.3s;
-    }
-
-    .floating-button img {
-      width: 35px;
-      height: 35px;
-    }
-
     #bulletin-modal {
-      display: none;
       position: fixed;
       top: 0;
       left: 0;
@@ -45,6 +21,7 @@
       height: 100%;
       background-color: rgba(0,0,0,0.7);
       z-index: 2000;
+      display: flex;
       justify-content: center;
       align-items: center;
     }
@@ -68,6 +45,15 @@
       margin-bottom: 15px;
     }
 
+    .bulletin-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #888;
+    }
+
     .bulletin-entry {
       background-color: #f9f9f9;
       border-left: 5px solid #3e9956;
@@ -80,15 +66,6 @@
     .bulletin-entry:hover {
       transform: translateX(10px);
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .bulletin-close {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 24px;
-      cursor: pointer;
-      color: #888;
     }
 
     .loading {
@@ -117,12 +94,8 @@
   </style>
 </head>
 <body>
-  <div class="floating-button" onclick="openBulletinModal()">
-    <img src="https://cdn-icons-png.flaticon.com/512/5028/5028917.png" alt="公告">
-  </div>
-
-  <div id="bulletin-modal" onclick="closeBulletinModal(event)">
-    <div class="bulletin-content" onclick="event.stopPropagation()">
+  <div id="bulletin-modal">
+    <div class="bulletin-content">
       <span class="bulletin-close" onclick="closeBulletinModal()">&times;</span>
       <div class="bulletin-header">
         <h2>📢 亞灣工務所 公告欄</h2>
@@ -138,13 +111,11 @@
     // Google試算表的公開發佈CSV網址
     const SPREADSHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRC4HgLq2IE7lKm4lixBvo0X4f6Erl6JdW6prqkrr83AypmGiwfnUCyCFXcoN_KfNbGCvUu5u6vHXp5/pub?output=csv';
 
-    function openBulletinModal() {
-      document.getElementById('bulletin-modal').style.display = 'flex';
-      fetchBulletinEntries();
-    }
+    // 頁面載入時直接獲取公告
+    document.addEventListener('DOMContentLoaded', fetchBulletinEntries);
 
-    function closeBulletinModal(event) {
-      document.getElementById('bulletin-modal').style.display = 'none';
+    function closeBulletinModal() {
+      window.close(); // 直接關閉視窗
     }
 
     async function fetchBulletinEntries() {
@@ -169,11 +140,11 @@
                 const content = entry[1] || '暫無詳細內容';
                 const date = entry[2] || '';
 
-                entryDiv.innerHTML = 
+                entryDiv.innerHTML = `
                   <div class="entry-title">${icon} ${title}</div>
                   <div class="entry-content">${content}</div>
                   <div class="entry-date">${date}</div>
-                ;
+                `;
                 
                 entriesContainer.appendChild(entryDiv);
               }
@@ -181,33 +152,33 @@
 
             // 如果沒有公告
             if (entriesContainer.children.length === 0) {
-              entriesContainer.innerHTML = 
+              entriesContainer.innerHTML = `
                 <div style="text-align:center; color:#888;">
                   目前尚無公告
                 </div>
-              ;
+              `;
             }
           },
           error: function(error) {
             console.error('CSV解析錯誤:', error);
             const entriesContainer = document.getElementById('bulletin-entries');
-            entriesContainer.innerHTML = 
+            entriesContainer.innerHTML = `
               <div style="color:red; text-align:center;">
                 <h3>🚨 CSV解析錯誤</h3>
                 <p>${error.message}</p>
               </div>
-            ;
+            `;
           }
         });
 
       } catch (error) {
         const entriesContainer = document.getElementById('bulletin-entries');
-        entriesContainer.innerHTML = 
+        entriesContainer.innerHTML = `
           <div style="color:red; text-align:center;">
             <h3>🚨 載入錯誤</h3>
             <p>${error.message}</p>
           </div>
-        ;
+        `;
         console.error('公告載入失敗:', error);
       }
     }

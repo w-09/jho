@@ -56,6 +56,26 @@
         button:hover {
             background: #0056b3;
         }
+        button.edit-btn {
+            background: #28a745;
+        }
+        button.edit-btn:hover {
+            background: #218838;
+        }
+        button.cancel-btn {
+            background: #6c757d;
+        }
+        button.cancel-btn:hover {
+            background: #5a6268;
+        }
+        button.delete-btn {
+            background: #dc3545;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        button.delete-btn:hover {
+            background: #c82333;
+        }
         .data-table {
             margin: 20px 0;
             overflow-x: auto;
@@ -83,6 +103,51 @@
         .export-buttons {
             text-align: center;
             margin: 20px 0;
+        }
+        .editable {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+        }
+        .edit-input {
+            width: 80px;
+            text-align: center;
+            padding: 3px;
+            border: 1px solid #007bff;
+            border-radius: 3px;
+        }
+        .add-project-form {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        .form-group label {
+            width: 120px;
+        }
+        .form-group input {
+            width: 150px;
+        }
+        .status-indicator {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-ahead {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-normal {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .status-behind {
+            background: #f8d7da;
+            color: #721c24;
         }
     </style>
 </head>
@@ -131,6 +196,7 @@
                         <th>預定進度 (%)</th>
                         <th>差異 (%)</th>
                         <th>狀態</th>
+                        <th>操作</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -139,9 +205,30 @@
         </div>
 
         <div class="export-buttons">
-            <button onclick="editData()">編輯數據</button>
-            <button onclick="addProject()">新增項目</button>
+            <button class="edit-btn" id="editModeBtn" onclick="toggleEditMode()">進入編輯模式</button>
+            <button onclick="showAddForm()">新增項目</button>
             <button onclick="saveData()">儲存修改</button>
+            <button onclick="loadSampleData()">載入範例數據</button>
+        </div>
+
+        <div class="add-project-form" id="addProjectForm">
+            <h4>新增工程項目</h4>
+            <div class="form-group">
+                <label>項目名稱:</label>
+                <input type="text" id="newProjectName" placeholder="請輸入項目名稱">
+            </div>
+            <div class="form-group">
+                <label>實際進度(%):</label>
+                <input type="number" id="newProjectActual" step="0.01" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>預定進度(%):</label>
+                <input type="number" id="newProjectPlanned" step="0.01" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <button class="edit-btn" onclick="addProject()">確認新增</button>
+                <button class="cancel-btn" onclick="hideAddForm()">取消</button>
+            </div>
         </div>
     </div>
 
@@ -165,6 +252,7 @@
         ];
 
         let progressChart, differenceChart;
+        let editMode = false;
 
         // 初始化圖表
         function initCharts() {
@@ -262,12 +350,32 @@
             updateTable();
         }
 
+        // 切換編輯模式
+        function toggleEditMode() {
+            editMode = !editMode;
+            const btn = document.getElementById('editModeBtn');
+            
+            if (editMode) {
+                btn.textContent = '退出編輯模式';
+                btn.className = 'cancel-btn';
+            } else {
+                btn.textContent = '進入編輯模式';
+                btn.className = 'edit-btn';
+            }
+            
+            updateTable();
+        }
+
         // 更新圖表
         function updateChart() {
             const chartType = document.getElementById('chartType').value;
             const showActual = document.getElementById('showActual').checked;
             const showPlanned = document.getElementById('showPlanned').checked;
             const showDifference = document.getElementById('showDifference').checked;
+
+            // 更新數據
+            progressChart.data.labels = projectData.map(item => item.name);
+            differenceChart.data.labels = projectData.map(item => item.name);
 
             // 更新進度圖表類型
             progressChart.config.type = chartType;
@@ -302,7 +410,14 @@
                 });
             }
 
+            // 更新差異圖表
+            differenceChart.data.datasets[0].data = projectData.map(item => item.difference);
+            differenceChart.data.datasets[0].backgroundColor = projectData.map(item => 
+                item.difference < 0 ? 'rgba(255, 107, 107, 0.8)' : 'rgba(78, 205, 196, 0.8)'
+            );
+
             progressChart.update();
+            differenceChart.update();
         }
 
         // 更新數據表
@@ -310,16 +425,111 @@
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             
-            projectData.forEach(item => {
+            projectData.forEach((item, index) => {
                 const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td>${item.name}</td>
-                    <td>${item.actual.toFixed(2)}</td>
-                    <td>${item.planned.toFixed(2)}</td>
-                    <td class="${item.difference < 0 ? 'negative' : 'positive'}">${item.difference.toFixed(2)}</td>
-                    <td>${item.difference < -0.1 ? '落後' : item.difference > 0.1 ? '超前' : '正常'}</td>
-                `;
+                const status = item.difference < -0.1 ? '落後' : item.difference > 0.1 ? '超前' : '正常';
+                const statusClass = item.difference < -0.1 ? 'status-behind' : item.difference > 0.1 ? 'status-ahead' : 'status-normal';
+                
+                if (editMode) {
+                    row.innerHTML = `
+                        <td><input type="text" class="edit-input" value="${item.name}" onchange="updateProjectData(${index}, 'name', this.value)"></td>
+                        <td><input type="number" class="edit-input" step="0.01" value="${item.actual.toFixed(2)}" onchange="updateProjectData(${index}, 'actual', parseFloat(this.value))"></td>
+                        <td><input type="number" class="edit-input" step="0.01" value="${item.planned.toFixed(2)}" onchange="updateProjectData(${index}, 'planned', parseFloat(this.value))"></td>
+                        <td class="${item.difference < 0 ? 'negative' : 'positive'}">${item.difference.toFixed(2)}</td>
+                        <td><span class="status-indicator ${statusClass}">${status}</span></td>
+                        <td><button class="delete-btn" onclick="deleteProject(${index})">刪除</button></td>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <td>${item.name}</td>
+                        <td>${item.actual.toFixed(2)}</td>
+                        <td>${item.planned.toFixed(2)}</td>
+                        <td class="${item.difference < 0 ? 'negative' : 'positive'}">${item.difference.toFixed(2)}</td>
+                        <td><span class="status-indicator ${statusClass}">${status}</span></td>
+                        <td>-</td>
+                    `;
+                }
             });
+        }
+
+        // 更新項目數據
+        function updateProjectData(index, field, value) {
+            projectData[index][field] = value;
+            
+            if (field === 'actual' || field === 'planned') {
+                projectData[index].difference = projectData[index].actual - projectData[index].planned;
+            }
+            
+            updateChart();
+            updateTable();
+        }
+
+        // 刪除項目
+        function deleteProject(index) {
+            if (confirm('確定要刪除這個項目嗎？')) {
+                projectData.splice(index, 1);
+                updateChart();
+                updateTable();
+            }
+        }
+
+        // 顯示新增表單
+        function showAddForm() {
+            document.getElementById('addProjectForm').style.display = 'block';
+        }
+
+        // 隱藏新增表單
+        function hideAddForm() {
+            document.getElementById('addProjectForm').style.display = 'none';
+            document.getElementById('newProjectName').value = '';
+            document.getElementById('newProjectActual').value = '';
+            document.getElementById('newProjectPlanned').value = '';
+        }
+
+        // 新增項目
+        function addProject() {
+            const name = document.getElementById('newProjectName').value.trim();
+            const actual = parseFloat(document.getElementById('newProjectActual').value) || 0;
+            const planned = parseFloat(document.getElementById('newProjectPlanned').value) || 0;
+            
+            if (!name) {
+                alert('請輸入項目名稱！');
+                return;
+            }
+            
+            const difference = actual - planned;
+            projectData.push({name, actual, planned, difference});
+            
+            updateChart();
+            updateTable();
+            hideAddForm();
+            
+            alert('項目新增成功！');
+        }
+
+        // 載入範例數據
+        function loadSampleData() {
+            if (confirm('這將重置所有數據為範例數據，確定要繼續嗎？')) {
+                projectData = [
+                    {name: '假設工程', actual: 1.47, planned: 1.74, difference: -0.27},
+                    {name: '工地監視系統', actual: 0.04, planned: 0.04, difference: 0.00},
+                    {name: '基礎工程', actual: 6.07, planned: 6.10, difference: -0.03},
+                    {name: '結構工程', actual: 16.61, planned: 16.80, difference: -0.19},
+                    {name: '內外裝修工程', actual: 0.81, planned: 2.05, difference: -1.24},
+                    {name: '門窗工程', actual: 0.45, planned: 0.36, difference: 0.09},
+                    {name: '防水隔熱工程', actual: 0.20, planned: 0.29, difference: -0.09},
+                    {name: '電氣設備工程', actual: 1.47, planned: 0.98, difference: 0.49},
+                    {name: '弱電設備工程', actual: 0.54, planned: 0.24, difference: 0.30},
+                    {name: '給排水設備工程', actual: 0.55, planned: 0.34, difference: 0.21},
+                    {name: '消防設備工程', actual: 0.48, planned: 0.33, difference: 0.15},
+                    {name: '智慧建築設備工程', actual: 0.03, planned: 0.08, difference: -0.05},
+                    {name: '間接工程費', actual: 3.59, planned: 4.80, difference: -1.21},
+                    {name: '統包設計費', actual: 1.77, planned: 0.00, difference: 1.77}
+                ];
+                updateChart();
+                updateTable();
+                alert('範例數據載入完成！');
+            }
         }
 
         // 匯出圖表
@@ -332,7 +542,7 @@
 
         // 匯出數據
         function exportData() {
-            let csv = '工程項目,實際進度(%),預定進度(%),差異(%),狀態\n';
+            let csv = '\uFEFF工程項目,實際進度(%),預定進度(%),差異(%),狀態\n';
             projectData.forEach(item => {
                 const status = item.difference < -0.1 ? '落後' : item.difference > 0.1 ? '超前' : '正常';
                 csv += `${item.name},${item.actual},${item.planned},${item.difference},${status}\n`;
@@ -350,35 +560,35 @@
             window.print();
         }
 
-        // 編輯數據
-        function editData() {
-            alert('數據編輯功能：您可以直接修改下方表格中的數值，然後點擊"儲存修改"按鈕。');
-        }
-
-        // 新增項目
-        function addProject() {
-            const name = prompt('請輸入新項目名稱：');
-            if (name) {
-                const actual = parseFloat(prompt('請輸入實際進度(%)：') || '0');
-                const planned = parseFloat(prompt('請輸入預定進度(%)：') || '0');
-                const difference = actual - planned;
-                
-                projectData.push({name, actual, planned, difference});
-                updateChart();
-                updateTable();
+        // 儲存數據
+        function saveData() {
+            try {
+                localStorage.setItem('engineeringProgressData', JSON.stringify(projectData));
+                alert('數據已儲存到瀏覽器本地存儲！');
+            } catch (e) {
+                alert('儲存失敗：' + e.message);
             }
         }
 
-        // 儲存數據
-        function saveData() {
-            alert('數據已儲存！您可以匯出為CSV檔案進行備份。');
+        // 載入儲存的數據
+        function loadSavedData() {
+            try {
+                const savedData = localStorage.getItem('engineeringProgressData');
+                if (savedData) {
+                    projectData = JSON.parse(savedData);
+                    updateChart();
+                    updateTable();
+                }
+            } catch (e) {
+                console.log('載入儲存數據失敗：', e.message);
+            }
         }
 
         // 頁面載入時初始化
         window.onload = function() {
+            loadSavedData(); // 先嘗試載入儲存的數據
             initCharts();
         };
     </script>
 </body>
 </html>
-

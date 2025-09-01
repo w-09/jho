@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工程進度分析圖表 - Google Sheets整合版</title>
+    <title>工程進度分析圖表 - 後台自動更新</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -19,24 +19,24 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .sync-panel {
-            background: linear-gradient(135deg, #4285f4, #34a853);
+        .auto-sync-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #28a745, #20c997);
             color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            animation: pulse 2s infinite;
         }
-        .sync-panel h3 {
-            margin-top: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .sync-status {
-            background: rgba(255,255,255,0.2);
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
         }
         .chart-container {
             position: relative;
@@ -57,16 +57,11 @@
             width: 150px;
             font-weight: bold;
         }
-        input, select, textarea {
+        input, select {
             padding: 8px;
             margin: 0 10px;
             border: 1px solid #ddd;
             border-radius: 3px;
-        }
-        textarea {
-            width: 400px;
-            height: 60px;
-            resize: vertical;
         }
         button {
             background: #007bff;
@@ -81,18 +76,6 @@
         button:hover {
             background: #0056b3;
             transform: translateY(-1px);
-        }
-        button.sync-btn {
-            background: #28a745;
-        }
-        button.sync-btn:hover {
-            background: #218838;
-        }
-        button.danger-btn {
-            background: #dc3545;
-        }
-        button.danger-btn:hover {
-            background: #c82333;
         }
         .data-table {
             margin: 20px 0;
@@ -138,117 +121,55 @@
             background: #f8d7da;
             color: #721c24;
         }
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        .loading.show {
-            display: block;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .setup-instructions {
-            background: #e9ecef;
-            padding: 20px;
-            border-radius: 10px;
+        .sync-log {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
             margin: 20px 0;
-            border-left: 5px solid #007bff;
+            border-radius: 0 5px 5px 0;
+            max-height: 200px;
+            overflow-y: auto;
         }
-        .setup-instructions h4 {
-            color: #007bff;
+        .sync-log h4 {
             margin-top: 0;
+            color: #007bff;
         }
-        .setup-instructions ol {
-            padding-left: 20px;
-        }
-        .setup-instructions li {
-            margin: 8px 0;
-            line-height: 1.5;
-        }
-        .url-input {
-            width: 500px;
-            font-family: monospace;
+        .log-entry {
             font-size: 12px;
+            margin: 5px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid #e9ecef;
         }
-        .last-sync {
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .log-success {
+            color: #28a745;
+        }
+        .log-error {
+            color: #dc3545;
+        }
+        .log-info {
+            color: #17a2b8;
+        }
+        .update-timestamp {
+            text-align: center;
             font-size: 12px;
-            opacity: 0.8;
-        }
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            border-radius: 5px;
+            color: #6c757d;
             margin: 10px 0;
-            border: 1px solid #f5c6cb;
-        }
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            border: 1px solid #c3e6cb;
         }
     </style>
 </head>
 <body>
+    <div class="auto-sync-indicator" id="syncIndicator">
+        🔄 自動同步中... <span id="nextUpdateIn">10</span>s
+    </div>
+
     <div class="container">
-        <h1>🏗️ 工程進度分析圖表 - Google Sheets整合版</h1>
-        
-        <div class="sync-panel">
-            <h3>
-                📊 Google Sheets 數據同步
-                <span id="connectionStatus" style="font-size: 12px;">●</span>
-            </h3>
-            <div class="sync-status">
-                <div>狀態: <span id="syncStatus">未連接</span></div>
-                <div class="last-sync">最後同步: <span id="lastSyncTime">從未同步</span></div>
-            </div>
-            <div class="control-group">
-                <label>Google Sheets URL:</label>
-                <textarea id="sheetsUrl" class="url-input" placeholder="請貼上您的Google Sheets共享連結..."></textarea>
-            </div>
-            <div class="control-group">
-                <button class="sync-btn" onclick="connectToSheets()">🔗 連接Google Sheets</button>
-                <button class="sync-btn" onclick="syncFromSheets()">⬇️ 從Sheets載入數據</button>
-                <button onclick="syncToSheets()">⬆️ 上傳數據到Sheets</button>
-                <button onclick="autoSync()">🔄 啟用自動同步</button>
-            </div>
+        <h1>🏗️ 工程進度分析圖表</h1>
+        <div class="update-timestamp">
+            資料來源: Google Sheets | 最後更新: <span id="lastUpdate">載入中...</span>
         </div>
-
-        <div class="setup-instructions">
-            <h4>📋 Google Sheets 設定說明</h4>
-            <ol>
-                <li><strong>建立Google Sheets:</strong> 在Google Drive中建立新的試算表</li>
-                <li><strong>設定欄位:</strong> 在第一列設定欄位標題：
-                    <code>工程項目 | 實際進度 | 預定進度 | 差異 | 狀態</code>
-                </li>
-                <li><strong>設定共享:</strong> 點擊右上角「共用」→「變更為知道連結的任何人」→「檢視者」</li>
-                <li><strong>取得連結:</strong> 複製共享連結並貼到上方URL欄位</li>
-                <li><strong>發布為CSV:</strong> 檔案 → 發布至網路 → 選擇「逗號分隔值(.csv)」</li>
-            </ol>
-            <p><strong>範例URL格式:</strong> <code>https://docs.google.com/spreadsheets/d/[SHEET_ID]/edit#gid=0</code></p>
-        </div>
-
-        <div class="loading" id="loadingIndicator">
-            <div class="spinner"></div>
-            <div>正在同步數據...</div>
-        </div>
-
-        <div id="messageArea"></div>
 
         <div class="controls">
             <h3>圖表控制</h3>
@@ -267,9 +188,9 @@
                 <input type="checkbox" id="showDifference" onchange="updateChart()"> 差異
             </div>
             <div class="control-group">
-                <button onclick="exportChart()">📊 匯出圖表為PNG</button>
-                <button onclick="exportData()">📋 匯出數據為CSV</button>
-                <button onclick="printChart()">🖨️ 列印圖表</button>
+                <button onclick="manualSync()">🔄 手動同步</button>
+                <button onclick="exportChart()">📊 匯出圖表</button>
+                <button onclick="exportData()">📋 匯出數據</button>
             </div>
         </div>
 
@@ -282,7 +203,7 @@
         </div>
 
         <div class="data-table">
-            <h3>詳細數據表 <span id="dataCount">(0 項目)</span></h3>
+            <h3>詳細數據表 <span id="dataCount">(載入中...)</span></h3>
             <table id="dataTable">
                 <thead>
                     <tr>
@@ -291,224 +212,59 @@
                         <th>預定進度 (%)</th>
                         <th>差異 (%)</th>
                         <th>狀態</th>
-                        <th>最後更新</th>
+                        <th>趨勢</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
                 </tbody>
             </table>
         </div>
+
+        <div class="sync-log">
+            <h4>📋 同步記錄</h4>
+            <div id="syncLogContent">
+                <div class="log-entry log-info">系統啟動中...</div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // 數據變數
+        // 系統配置
+        const CONFIG = {
+            SHEETS_ID: '1TJwWvb0kW84bmrpdQeF1T8cwrFFS5ebOOYwr1QVheWE',
+            SYNC_INTERVAL: 10000, // 10秒同步一次
+            MAX_LOG_ENTRIES: 20
+        };
+
+        // 全域變數
         let projectData = [];
+        let previousData = [];
         let progressChart, differenceChart;
-        let sheetsUrl = '';
-        let autoSyncInterval = null;
-        let isConnected = false;
+        let syncInterval = null;
+        let countdownInterval = null;
+        let nextUpdateCountdown = 10;
 
-        // 範例數據
-        const sampleData = [
-            {name: '假設工程', actual: 1.47, planned: 1.74, difference: -0.27, lastUpdate: new Date().toLocaleString()},
-            {name: '工地監視系統', actual: 0.04, planned: 0.04, difference: 0.00, lastUpdate: new Date().toLocaleString()},
-            {name: '基礎工程', actual: 6.07, planned: 6.10, difference: -0.03, lastUpdate: new Date().toLocaleString()},
-            {name: '結構工程', actual: 16.61, planned: 16.80, difference: -0.19, lastUpdate: new Date().toLocaleString()},
-            {name: '內外裝修工程', actual: 0.81, planned: 2.05, difference: -1.24, lastUpdate: new Date().toLocaleString()},
-            {name: '門窗工程', actual: 0.45, planned: 0.36, difference: 0.09, lastUpdate: new Date().toLocaleString()},
-            {name: '防水隔熱工程', actual: 0.20, planned: 0.29, difference: -0.09, lastUpdate: new Date().toLocaleString()},
-            {name: '電氣設備工程', actual: 1.47, planned: 0.98, difference: 0.49, lastUpdate: new Date().toLocaleString()},
-            {name: '弱電設備工程', actual: 0.54, planned: 0.24, difference: 0.30, lastUpdate: new Date().toLocaleString()},
-            {name: '給排水設備工程', actual: 0.55, planned: 0.34, difference: 0.21, lastUpdate: new Date().toLocaleString()},
-            {name: '消防設備工程', actual: 0.48, planned: 0.33, difference: 0.15, lastUpdate: new Date().toLocaleString()},
-            {name: '智慧建築設備工程', actual: 0.03, planned: 0.08, difference: -0.05, lastUpdate: new Date().toLocaleString()},
-            {name: '間接工程費', actual: 3.59, planned: 4.80, difference: -1.21, lastUpdate: new Date().toLocaleString()},
-            {name: '統包設計費', actual: 1.77, planned: 0.00, difference: 1.77, lastUpdate: new Date().toLocaleString()}
-        ];
+        // Google Sheets CSV URL
+        const SHEETS_CSV_URL = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEETS_ID}/export?format=csv&gid=0`;
 
-        // 初始化
-        function init() {
-            projectData = [...sampleData];
-            initCharts();
-            updateTable();
-            loadSavedSettings();
-        }
-
-        // 載入儲存的設定
-        function loadSavedSettings() {
-            const savedUrl = localStorage.getItem('sheetsUrl');
-            if (savedUrl) {
-                document.getElementById('sheetsUrl').value = savedUrl;
-                sheetsUrl = savedUrl;
-            }
-        }
-
-        // 連接到Google Sheets
-        function connectToSheets() {
-            const url = document.getElementById('sheetsUrl').value.trim();
-            if (!url) {
-                showMessage('請輸入Google Sheets URL', 'error');
-                return;
-            }
-
-            if (!isValidSheetsUrl(url)) {
-                showMessage('請輸入有效的Google Sheets URL', 'error');
-                return;
-            }
-
-            sheetsUrl = url;
-            localStorage.setItem('sheetsUrl', url);
-            isConnected = true;
-            
-            updateConnectionStatus('已連接', 'green');
-            showMessage('成功連接到Google Sheets！', 'success');
-        }
-
-        // 驗證Google Sheets URL
-        function isValidSheetsUrl(url) {
-            return url.includes('docs.google.com/spreadsheets') || 
-                   url.includes('drive.google.com');
-        }
-
-        // 從Google Sheets同步數據
-        async function syncFromSheets() {
-            if (!sheetsUrl) {
-                showMessage('請先連接Google Sheets', 'error');
-                return;
-            }
-
-            showLoading(true);
+        // 初始化系統
+        async function initSystem() {
+            addLogEntry('系統初始化中...', 'info');
             
             try {
-                // 將Google Sheets URL轉換為CSV格式
-                const csvUrl = convertToCsvUrl(sheetsUrl);
+                await initCharts();
+                await performSync();
+                startAutoSync();
+                startCountdown();
                 
-                const response = await fetch(csvUrl);
-                if (!response.ok) {
-                    throw new Error('無法讀取Google Sheets數據');
-                }
-                
-                const csvText = await response.text();
-                const parsedData = parseCSV(csvText);
-                
-                if (parsedData.length > 0) {
-                    projectData = parsedData;
-                    updateChart();
-                    updateTable();
-                    updateLastSyncTime();
-                    showMessage(`成功載入 ${parsedData.length} 筆數據`, 'success');
-                } else {
-                    showMessage('Google Sheets中沒有找到有效數據', 'error');
-                }
-                
+                addLogEntry('系統初始化完成，自動同步已啟動', 'success');
             } catch (error) {
-                console.error('同步錯誤:', error);
-                showMessage('同步失敗: ' + error.message, 'error');
-            } finally {
-                showLoading(false);
+                addLogEntry('系統初始化失敗: ' + error.message, 'error');
             }
-        }
-
-        // 將Google Sheets URL轉換為CSV URL
-        function convertToCsvUrl(url) {
-            // 提取sheet ID
-            const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-            if (match) {
-                const sheetId = match[1];
-                return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
-            }
-            return url;
-        }
-
-        // 解析CSV數據
-        function parseCSV(csvText) {
-            const lines = csvText.split('\n');
-            const data = [];
-            
-            // 跳過標題列，從第二列開始
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-                
-                const columns = line.split(',');
-                if (columns.length >= 4) {
-                    const name = columns[0].replace(/"/g, '');
-                    const actual = parseFloat(columns[1]) || 0;
-                    const planned = parseFloat(columns[2]) || 0;
-                    const difference = actual - planned;
-                    
-                    data.push({
-                        name: name,
-                        actual: actual,
-                        planned: planned,
-                        difference: difference,
-                        lastUpdate: new Date().toLocaleString()
-                    });
-                }
-            }
-            
-            return data;
-        }
-
-        // 上傳數據到Google Sheets（模擬功能）
-        function syncToSheets() {
-            if (!sheetsUrl) {
-                showMessage('請先連接Google Sheets', 'error');
-                return;
-            }
-
-            showLoading(true);
-            
-            // 模擬上傳過程
-            setTimeout(() => {
-                showLoading(false);
-                showMessage('注意：實際上傳功能需要Google Sheets API授權。目前為模擬功能。', 'error');
-                
-                // 生成CSV格式供手動複製
-                generateCSVForManualUpload();
-            }, 2000);
-        }
-
-        // 生成CSV供手動上傳
-        function generateCSVForManualUpload() {
-            let csv = '工程項目,實際進度,預定進度,差異,狀態\n';
-            projectData.forEach(item => {
-                const status = getStatus(item.difference);
-                csv += `"${item.name}",${item.actual},${item.planned},${item.difference},"${status}"\n`;
-            });
-            
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = '工程進度數據_上傳用.csv';
-            link.click();
-            
-            showMessage('已下載CSV檔案，請手動複製到Google Sheets', 'success');
-        }
-
-        // 自動同步
-        function autoSync() {
-            if (autoSyncInterval) {
-                clearInterval(autoSyncInterval);
-                autoSyncInterval = null;
-                showMessage('自動同步已停止', 'success');
-                return;
-            }
-
-            if (!sheetsUrl) {
-                showMessage('請先連接Google Sheets', 'error');
-                return;
-            }
-
-            autoSyncInterval = setInterval(() => {
-                syncFromSheets();
-            }, 30000); // 每30秒同步一次
-
-            showMessage('自動同步已啟用（每30秒）', 'success');
         }
 
         // 初始化圖表
-        function initCharts() {
+        async function initCharts() {
             const ctx1 = document.getElementById('progressChart').getContext('2d');
             progressChart = new Chart(ctx1, {
                 type: 'bar',
@@ -523,6 +279,10 @@
                         title: {
                             display: true,
                             text: '工程進度比較 - 實際進度 vs 預定進度'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
                         }
                     },
                     scales: {
@@ -533,6 +293,10 @@
                                 text: '進度百分比 (%)'
                             }
                         }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
                     }
                 }
             });
@@ -550,7 +314,7 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: '工程進度差異分析'
+                            text: '工程進度差異分析 (負值=落後，正值=超前)'
                         }
                     },
                     scales: {
@@ -560,11 +324,166 @@
                                 text: '進度差異 (%)'
                             }
                         }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
                     }
                 }
             });
+        }
 
-            updateChart();
+        // 執行同步
+        async function performSync() {
+            try {
+                addLogEntry('開始從Google Sheets同步數據...', 'info');
+                
+                const response = await fetch(SHEETS_CSV_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const csvText = await response.text();
+                const newData = parseCSV(csvText);
+                
+                if (newData.length === 0) {
+                    throw new Error('未找到有效數據');
+                }
+
+                // 檢查數據是否有變化
+                const hasChanges = detectChanges(newData);
+                
+                // 保存前一次的數據
+                previousData = [...projectData];
+                projectData = newData;
+                
+                updateChart();
+                updateTable();
+                updateLastUpdateTime();
+                
+                const changeInfo = hasChanges ? ` (檢測到 ${hasChanges} 項變更)` : ' (無變更)';
+                addLogEntry(`同步成功: 載入 ${newData.length} 筆數據${changeInfo}`, 'success');
+                
+            } catch (error) {
+                addLogEntry('同步失敗: ' + error.message, 'error');
+                console.error('同步錯誤:', error);
+            }
+        }
+
+        // 解析CSV數據
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const columns = parseCSVLine(line);
+                if (columns.length >= 3) {
+                    const name = columns[0].replace(/"/g, '').trim();
+                    const actual = parseFloat(columns[1]) || 0;
+                    const planned = parseFloat(columns[2]) || 0;
+                    const difference = actual - planned;
+                    
+                    if (name) {
+                        data.push({
+                            name: name,
+                            actual: actual,
+                            planned: planned,
+                            difference: difference,
+                            lastUpdate: new Date().toLocaleString()
+                        });
+                    }
+                }
+            }
+            
+            return data;
+        }
+
+        // 解析CSV行（處理逗號在引號內的情況）
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current);
+            return result;
+        }
+
+        // 檢測數據變化
+        function detectChanges(newData) {
+            if (previousData.length === 0) return 0;
+            
+            let changes = 0;
+            
+            newData.forEach(newItem => {
+                const oldItem = previousData.find(item => item.name === newItem.name);
+                if (!oldItem) {
+                    changes++; // 新項目
+                } else if (
+                    oldItem.actual !== newItem.actual || 
+                    oldItem.planned !== newItem.planned
+                ) {
+                    changes++; // 數據變更
+                }
+            });
+            
+            return changes;
+        }
+
+        // 啟動自動同步
+        function startAutoSync() {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+            }
+            
+            syncInterval = setInterval(async () => {
+                await performSync();
+                resetCountdown();
+            }, CONFIG.SYNC_INTERVAL);
+        }
+
+        // 啟動倒數計時
+        function startCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            countdownInterval = setInterval(() => {
+                nextUpdateCountdown--;
+                document.getElementById('nextUpdateIn').textContent = nextUpdateCountdown;
+                
+                if (nextUpdateCountdown <= 0) {
+                    resetCountdown();
+                }
+            }, 1000);
+        }
+
+        // 重置倒數計時
+        function resetCountdown() {
+            nextUpdateCountdown = CONFIG.SYNC_INTERVAL / 1000;
+            document.getElementById('nextUpdateIn').textContent = nextUpdateCountdown;
+        }
+
+        // 手動同步
+        async function manualSync() {
+            addLogEntry('執行手動同步...', 'info');
+            await performSync();
+            resetCountdown();
         }
 
         // 更新圖表
@@ -587,7 +506,8 @@
                     data: projectData.map(item => item.actual),
                     backgroundColor: 'rgba(46, 134, 171, 0.8)',
                     borderColor: 'rgba(46, 134, 171, 1)',
-                    borderWidth: 1
+                    borderWidth: 2,
+                    tension: 0.4
                 });
             }
 
@@ -597,7 +517,8 @@
                     data: projectData.map(item => item.planned),
                     backgroundColor: 'rgba(162, 59, 114, 0.8)',
                     borderColor: 'rgba(162, 59, 114, 1)',
-                    borderWidth: 1
+                    borderWidth: 2,
+                    tension: 0.4
                 });
             }
 
@@ -607,7 +528,8 @@
                     data: projectData.map(item => item.difference),
                     backgroundColor: 'rgba(255, 193, 7, 0.8)',
                     borderColor: 'rgba(255, 193, 7, 1)',
-                    borderWidth: 1
+                    borderWidth: 2,
+                    tension: 0.4
                 });
             }
 
@@ -617,16 +539,20 @@
                 label: '進度差異',
                 data: projectData.map(item => item.difference),
                 backgroundColor: projectData.map(item => 
-                    item.difference < 0 ? 'rgba(255, 107, 107, 0.8)' : 'rgba(78, 205, 196, 0.8)'
+                    item.difference < -0.1 ? 'rgba(255, 107, 107, 0.8)' : 
+                    item.difference > 0.1 ? 'rgba(78, 205, 196, 0.8)' : 
+                    'rgba(108, 117, 125, 0.8)'
                 ),
                 borderColor: projectData.map(item => 
-                    item.difference < 0 ? 'rgba(255, 107, 107, 1)' : 'rgba(78, 205, 196, 1)'
+                    item.difference < -0.1 ? 'rgba(255, 107, 107, 1)' : 
+                    item.difference > 0.1 ? 'rgba(78, 205, 196, 1)' : 
+                    'rgba(108, 117, 125, 1)'
                 ),
-                borderWidth: 1
+                borderWidth: 2
             }];
 
-            progressChart.update();
-            differenceChart.update();
+            progressChart.update('active');
+            differenceChart.update('active');
         }
 
         // 更新數據表
@@ -637,69 +563,87 @@
             
             dataCount.textContent = `(${projectData.length} 項目)`;
             
-            projectData.forEach(item => {
+            projectData.forEach((item, index) => {
                 const row = tbody.insertRow();
                 const status = getStatus(item.difference);
                 const statusClass = getStatusClass(item.difference);
+                const trend = getTrend(item, index);
                 
                 row.innerHTML = `
-                    <td style="text-align: left;">${item.name}</td>
+                    <td style="text-align: left; font-weight: bold;">${item.name}</td>
                     <td>${item.actual.toFixed(2)}</td>
                     <td>${item.planned.toFixed(2)}</td>
                     <td class="${item.difference < 0 ? 'negative' : 'positive'}">${item.difference.toFixed(2)}</td>
                     <td><span class="status-indicator ${statusClass}">${status}</span></td>
-                    <td style="font-size: 11px;">${item.lastUpdate || '-'}</td>
+                    <td>${trend}</td>
                 `;
             });
         }
 
-        // 獲取狀態
-        function getStatus(difference) {
-            return difference < -0.1 ? '落後' : difference > 0.1 ? '超前' : '正常';
-        }
-
-        // 獲取狀態樣式類別
-        function getStatusClass(difference) {
-            return difference < -0.1 ? 'status-behind' : difference > 0.1 ? 'status-ahead' : 'status-normal';
-        }
-
-        // 顯示訊息
-        function showMessage(message, type) {
-            const messageArea = document.getElementById('messageArea');
-            const className = type === 'error' ? 'error-message' : 'success-message';
+        // 獲取趨勢
+        function getTrend(currentItem, index) {
+            if (previousData.length === 0) return '-';
             
-            messageArea.innerHTML = `<div class="${className}">${message}</div>`;
+            const previousItem = previousData.find(item => item.name === currentItem.name);
+            if (!previousItem) return '🆕';
             
-            setTimeout(() => {
-                messageArea.innerHTML = '';
-            }, 5000);
-        }
-
-        // 顯示載入指示器
-        function showLoading(show) {
-            const loading = document.getElementById('loadingIndicator');
-            if (show) {
-                loading.classList.add('show');
+            const actualChange = currentItem.actual - previousItem.actual;
+            const plannedChange = currentItem.planned - previousItem.planned;
+            
+            if (Math.abs(actualChange) < 0.01 && Math.abs(plannedChange) < 0.01) {
+                return '➡️';
+            } else if (actualChange > plannedChange) {
+                return '📈';
+            } else if (actualChange < plannedChange) {
+                return '📉';
             } else {
-                loading.classList.remove('show');
+                return '🔄';
             }
         }
 
-        // 更新連接狀態
-        function updateConnectionStatus(status, color) {
-            document.getElementById('syncStatus').textContent = status;
-            document.getElementById('connectionStatus').style.color = color;
+        // 獲取狀態
+        function getStatus(difference) {
+            if (difference < -0.5) return '嚴重落後';
+            if (difference < -0.1) return '落後';
+            if (difference > 0.5) return '大幅超前';
+            if (difference > 0.1) return '超前';
+            return '正常';
         }
 
-        // 更新最後同步時間
-        function updateLastSyncTime() {
-            document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
+        // 獲取狀態樣式
+        function getStatusClass(difference) {
+            return difference < -0.1 ? 'status-behind' : 
+                   difference > 0.1 ? 'status-ahead' : 'status-normal';
+        }
+
+        // 更新最後更新時間
+        function updateLastUpdateTime() {
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+        }
+
+        // 添加日誌記錄
+        function addLogEntry(message, type = 'info') {
+            const logContent = document.getElementById('syncLogContent');
+            const timestamp = new Date().toLocaleString();
+            const logClass = `log-${type}`;
+            
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${logClass}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            
+            logContent.insertBefore(entry, logContent.firstChild);
+            
+            // 限制日誌條目數量
+            const entries = logContent.querySelectorAll('.log-entry');
+            if (entries.length > CONFIG.MAX_LOG_ENTRIES) {
+                entries[entries.length - 1].remove();
+            }
         }
 
         // 匯出功能
         function exportChart() {
             const link = document.createElement('a');
-            link.download = '工程進度圖表.png';
+            link.download = `工程進度圖表_${new Date().toISOString().split('T')[0]}.png`;
             link.href = progressChart.toBase64Image();
             link.click();
         }
@@ -708,31 +652,34 @@
             let csv = '\uFEFF工程項目,實際進度(%),預定進度(%),差異(%),狀態,最後更新\n';
             projectData.forEach(item => {
                 const status = getStatus(item.difference);
-                csv += `"${item.name}",${item.actual},${item.planned},${item.difference},"${status}","${item.lastUpdate || '-'}"\n`;
+                csv += `"${item.name}",${item.actual},${item.planned},${item.difference},"${status}","${item.lastUpdate}"\n`;
             });
             
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = '工程進度數據.csv';
+            link.download = `工程進度數據_${new Date().toISOString().split('T')[0]}.csv`;
             link.click();
         }
 
-        function printChart() {
-            window.print();
-        }
-
-        // 頁面載入時初始化
+        // 頁面載入時啟動系統
         window.onload = function() {
-            init();
+            initSystem();
         };
 
         // 頁面卸載時清理
         window.onbeforeunload = function() {
-            if (autoSyncInterval) {
-                clearInterval(autoSyncInterval);
-            }
+            if (syncInterval) clearInterval(syncInterval);
+            if (countdownInterval) clearInterval(countdownInterval);
         };
+
+        // 處理頁面可見性變化（當頁面重新可見時立即同步）
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                addLogEntry('頁面重新可見，執行即時同步', 'info');
+                performSync();
+            }
+        });
     </script>
 </body>
 </html>

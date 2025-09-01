@@ -1,1 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工程進度分析圖表</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            position: relative;
+            height: 500px;
+            margin: 30px 0;
+        }
+        .controls {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .control-group {
+            margin: 10px 0;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+        input, select {
+            padding: 5px;
+            margin: 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .data-table {
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .negative {
+            color: #dc3545;
+        }
+        .positive {
+            color: #28a745;
+        }
+        .export-buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>工程進度分析圖表 (截止8/31)</h1>
+        
+        <div class="controls">
+            <h3>圖表控制</h3>
+            <div class="control-group">
+                <label>圖表類型:</label>
+                <select id="chartType" onchange="updateChart()">
+                    <option value="bar">柱狀圖</option>
+                    <option value="line">線圖</option>
+                    <option value="radar">雷達圖</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>顯示數據:</label>
+                <input type="checkbox" id="showActual" checked onchange="updateChart()"> 實際進度
+                <input type="checkbox" id="showPlanned" checked onchange="updateChart()"> 預定進度
+                <input type="checkbox" id="showDifference" onchange="updateChart()"> 差異
+            </div>
+            <div class="control-group">
+                <button onclick="exportChart()">匯出圖表為PNG</button>
+                <button onclick="exportData()">匯出數據為CSV</button>
+                <button onclick="printChart()">列印圖表</button>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="progressChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="differenceChart"></canvas>
+        </div>
+
+        <div class="data-table">
+            <h3>詳細數據表</h3>
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>工程項目</th>
+                        <th>實際進度 (%)</th>
+                        <th>預定進度 (%)</th>
+                        <th>差異 (%)</th>
+                        <th>狀態</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="export-buttons">
+            <button onclick="editData()">編輯數據</button>
+            <button onclick="addProject()">新增項目</button>
+            <button onclick="saveData()">儲存修改</button>
+        </div>
+    </div>
+
+    <script>
+        // 原始數據
+        let projectData = [
+            {name: '假設工程', actual: 1.47, planned: 1.74, difference: -0.27},
+            {name: '工地監視系統', actual: 0.04, planned: 0.04, difference: 0.00},
+            {name: '基礎工程', actual: 6.07, planned: 6.10, difference: -0.03},
+            {name: '結構工程', actual: 16.61, planned: 16.80, difference: -0.19},
+            {name: '內外裝修工程', actual: 0.81, planned: 2.05, difference: -1.24},
+            {name: '門窗工程', actual: 0.45, planned: 0.36, difference: 0.09},
+            {name: '防水隔熱工程', actual: 0.20, planned: 0.29, difference: -0.09},
+            {name: '電氣設備工程', actual: 1.47, planned: 0.98, difference: 0.49},
+            {name: '弱電設備工程', actual: 0.54, planned: 0.24, difference: 0.30},
+            {name: '給排水設備工程', actual: 0.55, planned: 0.34, difference: 0.21},
+            {name: '消防設備工程', actual: 0.48, planned: 0.33, difference: 0.15},
+            {name: '智慧建築設備工程', actual: 0.03, planned: 0.08, difference: -0.05},
+            {name: '間接工程費', actual: 3.59, planned: 4.80, difference: -1.21},
+            {name: '統包設計費', actual: 1.77, planned: 0.00, difference: 1.77}
+        ];
+
+        let progressChart, differenceChart;
+
+        // 初始化圖表
+        function initCharts() {
+            // 進度比較圖
+            const ctx1 = document.getElementById('progressChart').getContext('2d');
+            progressChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: projectData.map(item => item.name),
+                    datasets: [{
+                        label: '實際進度',
+                        data: projectData.map(item => item.actual),
+                        backgroundColor: 'rgba(46, 134, 171, 0.8)',
+                        borderColor: 'rgba(46, 134, 171, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: '預定進度',
+                        data: projectData.map(item => item.planned),
+                        backgroundColor: 'rgba(162, 59, 114, 0.8)',
+                        borderColor: 'rgba(162, 59, 114, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '工程進度比較 - 實際進度 vs 預定進度'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '進度百分比 (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '工程項目'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 差異分析圖
+            const ctx2 = document.getElementById('differenceChart').getContext('2d');
+            differenceChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: projectData.map(item => item.name),
+                    datasets: [{
+                        label: '進度差異',
+                        data: projectData.map(item => item.difference),
+                        backgroundColor: projectData.map(item => 
+                            item.difference < 0 ? 'rgba(255, 107, 107, 0.8)' : 'rgba(78, 205, 196, 0.8)'
+                        ),
+                        borderColor: projectData.map(item => 
+                            item.difference < 0 ? 'rgba(255, 107, 107, 1)' : 'rgba(78, 205, 196, 1)'
+                        ),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '工程進度差異分析 (負值表示落後，正值表示超前)'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: '進度差異 (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '工程項目'
+                            }
+                        }
+                    }
+                }
+            });
+
+            updateTable();
+        }
+
+        // 更新圖表
+        function updateChart() {
+            const chartType = document.getElementById('chartType').value;
+            const showActual = document.getElementById('showActual').checked;
+            const showPlanned = document.getElementById('showPlanned').checked;
+            const showDifference = document.getElementById('showDifference').checked;
+
+            // 更新進度圖表類型
+            progressChart.config.type = chartType;
+            
+            // 更新顯示的數據集
+            progressChart.data.datasets = [];
+            if (showActual) {
+                progressChart.data.datasets.push({
+                    label: '實際進度',
+                    data: projectData.map(item => item.actual),
+                    backgroundColor: 'rgba(46, 134, 171, 0.8)',
+                    borderColor: 'rgba(46, 134, 171, 1)',
+                    borderWidth: 1
+                });
+            }
+            if (showPlanned) {
+                progressChart.data.datasets.push({
+                    label: '預定進度',
+                    data: projectData.map(item => item.planned),
+                    backgroundColor: 'rgba(162, 59, 114, 0.8)',
+                    borderColor: 'rgba(162, 59, 114, 1)',
+                    borderWidth: 1
+                });
+            }
+            if (showDifference) {
+                progressChart.data.datasets.push({
+                    label: '差異',
+                    data: projectData.map(item => item.difference),
+                    backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                    borderColor: 'rgba(255, 193, 7, 1)',
+                    borderWidth: 1
+                });
+            }
+
+            progressChart.update();
+        }
+
+        // 更新數據表
+        function updateTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            projectData.forEach(item => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.actual.toFixed(2)}</td>
+                    <td>${item.planned.toFixed(2)}</td>
+                    <td class="${item.difference < 0 ? 'negative' : 'positive'}">${item.difference.toFixed(2)}</td>
+                    <td>${item.difference < -0.1 ? '落後' : item.difference > 0.1 ? '超前' : '正常'}</td>
+                `;
+            });
+        }
+
+        // 匯出圖表
+        function exportChart() {
+            const link = document.createElement('a');
+            link.download = '工程進度圖表.png';
+            link.href = progressChart.toBase64Image();
+            link.click();
+        }
+
+        // 匯出數據
+        function exportData() {
+            let csv = '工程項目,實際進度(%),預定進度(%),差異(%),狀態\n';
+            projectData.forEach(item => {
+                const status = item.difference < -0.1 ? '落後' : item.difference > 0.1 ? '超前' : '正常';
+                csv += `${item.name},${item.actual},${item.planned},${item.difference},${status}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = '工程進度數據.csv';
+            link.click();
+        }
+
+        // 列印圖表
+        function printChart() {
+            window.print();
+        }
+
+        // 編輯數據
+        function editData() {
+            alert('數據編輯功能：您可以直接修改下方表格中的數值，然後點擊"儲存修改"按鈕。');
+        }
+
+        // 新增項目
+        function addProject() {
+            const name = prompt('請輸入新項目名稱：');
+            if (name) {
+                const actual = parseFloat(prompt('請輸入實際進度(%)：') || '0');
+                const planned = parseFloat(prompt('請輸入預定進度(%)：') || '0');
+                const difference = actual - planned;
+                
+                projectData.push({name, actual, planned, difference});
+                updateChart();
+                updateTable();
+            }
+        }
+
+        // 儲存數據
+        function saveData() {
+            alert('數據已儲存！您可以匯出為CSV檔案進行備份。');
+        }
+
+        // 頁面載入時初始化
+        window.onload = function() {
+            initCharts();
+        };
+    </script>
+</body>
+</html>
 

@@ -1,687 +1,995 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>南一處-亞灣工務所進度分析圖表</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .auto-sync-indicator {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 25px;
-            font-size: 12px;
-            font-weight: bold;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 1000;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
-        }
-        .chart-container {
-            position: relative;
-            height: 500px;
-            margin: 30px 0;
-        }
-        .controls {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        .control-group {
-            margin: 10px 0;
-        }
-        label {
-            display: inline-block;
-            width: 150px;
-            font-weight: bold;
-        }
-        input, select {
-            padding: 8px;
-            margin: 0 10px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-            transition: all 0.3s ease;
-        }
-        button:hover {
-            background: #0056b3;
-            transform: translateY(-1px);
-        }
-        .data-table {
-            margin: 20px 0;
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        .negative {
-            color: #dc3545;
-            font-weight: bold;
-        }
-        .positive {
-            color: #28a745;
-            font-weight: bold;
-        }
-        .status-indicator {
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .status-ahead {
-            background: #d4edda;
-            color: #155724;
-        }
-        .status-normal {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        .status-behind {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .sync-log {
-            background: #f8f9fa;
-            border-left: 4px solid #007bff;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 5px 5px 0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .sync-log h4 {
-            margin-top: 0;
-            color: #007bff;
-        }
-        .log-entry {
-            font-size: 12px;
-            margin: 5px 0;
-            padding: 3px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .log-entry:last-child {
-            border-bottom: none;
-        }
-        .log-success {
-            color: #28a745;
-        }
-        .log-error {
-            color: #dc3545;
-        }
-        .log-info {
-            color: #17a2b8;
-        }
-        .update-timestamp {
-            text-align: center;
-            font-size: 12px;
-            color: #6c757d;
-            margin: 10px 0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>施工進度管理系統</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
+      background: #e8eaf0;
+      padding: 15px;
+      font-size: 14px;
+    }
+
+    .header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px 25px;
+      margin-bottom: 20px;
+      border-left: 5px solid #e74c3c;
+    }
+
+    .header h1 {
+      font-size: 22px;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .header p {
+      opacity: 0.85;
+      font-size: 13px;
+    }
+
+    .header-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .sync-status {
+      background: rgba(255,255,255,0.15);
+      padding: 6px 12px;
+      border-radius: 3px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sync-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2ecc71;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 3px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: #3498db;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2980b9;
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .building-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .building-tab {
+      padding: 15px;
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 3px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .building-tab:hover {
+      border-color: #3498db;
+    }
+
+    .building-tab.active {
+      background: #34495e;
+      color: white;
+      border-color: #34495e;
+    }
+
+    .building-tab .progress-text {
+      font-size: 20px;
+      margin-top: 5px;
+      font-weight: 700;
+    }
+
+    .controls {
+      background: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-left: 3px solid #3498db;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .controls label {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 13px;
+    }
+
+    .controls select, .controls input {
+      padding: 6px 12px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .controls select:focus, .controls input:focus {
+      border-color: #3498db;
+    }
+
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 15px;
+      border-left: 4px solid #3498db;
+    }
+
+    .stat-card h3 {
+      color: #7f8c8d;
+      font-size: 12px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .stat-card .number {
+      font-size: 28px;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #ecf0f1;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #3498db;
+      transition: width 0.3s;
+    }
+
+    .units-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .unit-card {
+      background: white;
+      padding: 15px;
+      border-left: 4px solid #95a5a6;
+      transition: all 0.2s;
+    }
+
+    .unit-card:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .unit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .unit-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .unit-progress {
+      font-size: 18px;
+      font-weight: 700;
+      color: #3498db;
+    }
+
+    .checklist {
+      list-style: none;
+    }
+
+    .checklist li {
+      padding: 10px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .checklist li:last-child {
+      border-bottom: none;
+    }
+
+    .item-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .item-name {
+      font-weight: 500;
+      color: #34495e;
+      font-size: 13px;
+    }
+
+    .item-controls {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .percentage-select,
+    .inspection-select {
+      flex: 1;
+      padding: 5px 8px;
+      border: 1px solid #ddd;
+      border-radius: 2px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .percentage-select:focus,
+    .inspection-select:focus {
+      border-color: #3498db;
+    }
+
+    .percentage-select.complete {
+      background: #d4edda;
+      border-color: #28a745;
+      color: #155724;
+    }
+
+    .percentage-select.progress {
+      background: #fff3cd;
+      border-color: #ffc107;
+      color: #856404;
+    }
+
+    .percentage-select.pending {
+      background: #f8d7da;
+      border-color: #dc3545;
+      color: #721c24;
+    }
+
+    .inspection-select.inspected {
+      background: #cfe2ff;
+      border-color: #0d6efd;
+      color: #084298;
+    }
+
+    .inspection-select.not-inspected {
+      background: #f8f9fa;
+      border-color: #adb5bd;
+      color: #6c757d;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 2px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-complete {
+      background: #28a745;
+      color: white;
+    }
+
+    .status-progress {
+      background: #ffc107;
+      color: #000;
+    }
+
+    .status-pending {
+      background: #dc3545;
+      color: white;
+    }
+
+    .floor-section {
+      margin-bottom: 30px;
+    }
+
+    .floor-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      padding: 12px 15px;
+      background: white;
+      border-left: 5px solid #e74c3c;
+    }
+
+    .setup-notice {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .setup-notice h3 {
+      color: #856404;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .setup-notice input {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #ffc107;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+
+    .last-update {
+      font-size: 10px;
+      color: #95a5a6;
+      margin-top: 5px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.6);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 25px;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      color: #e74c3c;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e74c3c;
+    }
+
+    .modal-header h2 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .modal-body {
+      margin-bottom: 20px;
+    }
+
+    .modal-body p {
+      color: #555;
+      margin-bottom: 15px;
+      line-height: 1.6;
+      font-size: 13px;
+    }
+
+    .modal-body input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .modal-body input:focus {
+      border-color: #3498db;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .units-grid {
+        grid-template-columns: 1fr;
+      }
+      .building-tabs {
+        grid-template-columns: 1fr;
+      }
+      .item-controls {
+        flex-direction: column;
+      }
+      .percentage-select,
+      .inspection-select {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="auto-sync-indicator" id="syncIndicator">
-        🔄 自動同步中... <span id="nextUpdateIn">10</span>s
+  <div class="header">
+    <h1>施工進度管理系統</h1>
+    <p>前鎮亞灣 夏公宅第一期新建統包工程</p>
+    <div class="header-controls">
+      <div class="sync-status">
+        <div class="sync-indicator"></div>
+        <span id="syncStatus">已連線</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-danger" onclick="showPasswordModal()">初始化數據</button>
+        <button class="btn btn-primary" onclick="refreshData()">重新整理</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span style="font-size: 24px;">⚠</span>
+        <h2>初始化確認</h2>
+      </div>
+      <div class="modal-body">
+        <p><strong>警告：此操作將清除所有現有數據！</strong></p>
+        <p>請輸入管理員密碼以繼續：</p>
+        <input type="password" id="passwordInput" placeholder="請輸入密碼" onkeypress="handlePasswordKeypress(event)">
+        <div class="error-message" id="errorMessage">密碼錯誤，請重試</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closePasswordModal()">取消</button>
+        <button class="btn btn-danger" onclick="verifyPassword()">確認初始化</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="setup-notice" id="setupNotice">
+    <h3>系統設置</h3>
+    <p><strong>請輸入 Google Apps Script 網址：</strong></p>
+    <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec" value="https://script.google.com/macros/s/AKfycbwJejVgtbQUUxJC8sYx2bC1k-nKUFkanrBswL2TSXUdCdCUT5Dn3SQQaulXcaScM7AW1Q/exec">
+    <button class="btn btn-primary" onclick="saveScriptUrl()">儲存設定</button>
+    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ffc107;">
+      <p><strong>設定管理員密碼（可選）：</strong></p>
+      <input type="password" id="adminPassword" placeholder="預設密碼：admin123">
+      <p style="font-size: 11px; color: #856404; margin-top: 5px;">
+        此密碼用於保護初始化功能
+      </p>
+    </div>
+  </div>
+
+  <div id="mainContent" style="display: none;">
+    <div class="building-tabs">
+      <div class="building-tab active" data-building="A棟" onclick="switchBuilding('A棟')">
+        <div>A棟</div>
+        <div class="progress-text" id="progressA">0%</div>
+      </div>
+      <div class="building-tab" data-building="B棟" onclick="switchBuilding('B棟')">
+        <div>B棟</div>
+        <div class="progress-text" id="progressB">0%</div>
+      </div>
+      <div class="building-tab" data-building="C棟" onclick="switchBuilding('C棟')">
+        <div>C棟</div>
+        <div class="progress-text" id="progressC">0%</div>
+      </div>
     </div>
 
-    <div class="container">
-        <h1> 亞灣工程進度</h1>
-        <div class="update-timestamp">
-            資料來源: Google Sheets | 最後更新: <span id="lastUpdate">載入中...</span>
-        </div>
+    <div class="controls">
+      <label for="floorFilter">樓層</label>
+      <select id="floorFilter" onchange="filterUnits()">
+        <option value="all">全部</option>
+        <option value="RF">RF</option>
+        <option value="14F">14F</option>
+        <option value="13F">13F</option>
+        <option value="12F">12F</option>
+        <option value="11F">11F</option>
+        <option value="10F">10F</option>
+        <option value="9F">9F</option>
+        <option value="8F">8F</option>
+        <option value="7F">7F</option>
+        <option value="6F">6F</option>
+        <option value="5F">5F</option>
+        <option value="4F">4F</option>
+        <option value="3F">3F</option>
+        <option value="2F">2F</option>
+        <option value="1F">1F</option>
+        <option value="B1F">B1F</option>
+      </select>
 
-        <div class="controls">
-            <div class="control-group">
-                <label>圖表類型選擇:</label>
-                <select id="chartType" onchange="updateChart()">
-                    <option value="bar">柱狀圖</option>
-                    <option value="line">線圖</option>
-                    <option value="radar">雷達圖</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label>顯示數據:</label>
-                <input type="checkbox" id="showActual" checked onchange="updateChart()"> 實際進度
-                <input type="checkbox" id="showPlanned" checked onchange="updateChart()"> 預定進度
-                <input type="checkbox" id="showDifference" onchange="updateChart()"> 差異
-            </div>
-            <div class="control-group">
-                <button onclick="manualSync()">手動同步</button>
-                <button onclick="exportChart()">匯出圖表</button>
-                <button onclick="exportData()">匯出數據</button>
-            </div>
-        </div>
+      <label for="categoryFilter">項目類別</label>
+      <select id="categoryFilter" onchange="filterUnits()">
+        <option value="all">全部</option>
+        <option value="室內泥作">室內泥作</option>
+        <option value="油漆">油漆</option>
+        <option value="輕隔間">輕隔間</option>
+        <option value="防水工程">防水工程</option>
+        <option value="地坪">地坪</option>
+        <option value="門窗">門窗</option>
+        <option value="衛浴">衛浴</option>
+        <option value="外牆泥作">外牆泥作</option>
+        <option value="外牆塗料">外牆塗料</option>
+        <option value="雜項">雜項</option>
+        <option value="清潔">清潔</option>
+      </select>
 
-        <div class="chart-container">
-            <canvas id="progressChart"></canvas>
-        </div>
+      <label for="statusFilter">狀態</label>
+      <select id="statusFilter" onchange="filterUnits()">
+        <option value="all">全部</option>
+        <option value="complete">已完成</option>
+        <option value="progress">進行中</option>
+        <option value="pending">未開始</option>
+      </select>
 
-        <div class="chart-container">
-            <canvas id="differenceChart"></canvas>
-        </div>
-
-        <div class="data-table">
-            <h3>詳細數據表 <span id="dataCount">(載入中...)</span></h3>
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        <th>工程項目</th>
-                        <th>實際進度 (%)</th>
-                        <th>預定進度 (%)</th>
-                        <th>差異 (%)</th>
-                        <th>狀態</th>
-                        <th>趨勢</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                </tbody>
-            </table>
-        </div>
-
-        <div class="sync-log">
-            <h4>📋 同步記錄</h4>
-            <div id="syncLogContent">
-                <div class="log-entry log-info">系統啟動中...</div>
-            </div>
-        </div>
+      <label for="searchUnit">搜尋</label>
+      <input type="text" id="searchUnit" placeholder="輸入關鍵字..." onkeyup="filterUnits()">
     </div>
 
-    <script>
-        // 系統配置
-        const CONFIG = {
-            SHEETS_ID: '1TJwWvb0kW84bmrpdQeF1T8cwrFFS5ebOOYwr1QVheWE',
-            SYNC_INTERVAL: 100000, // 100秒同步一次
-            MAX_LOG_ENTRIES: 20
-        };
+    <div class="stats-container">
+      <div class="stat-card">
+        <h3>完成率</h3>
+        <div class="number" id="currentProgress">0%</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="currentProgressBar"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <h3>已完成</h3>
+        <div class="number" id="completedItems">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>進行中</h3>
+        <div class="number" id="progressItems">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>總項目</h3>
+        <div class="number" id="totalItems">0</div>
+      </div>
+    </div>
 
-        // 全域變數
-        let projectData = [];
-        let previousData = [];
-        let progressChart, differenceChart;
-        let syncInterval = null;
-        let countdownInterval = null;
-        let nextUpdateCountdown = 10;
+    <div id="unitsContainer"></div>
+  </div>
 
-        // Google Sheets CSV URL
-        const SHEETS_CSV_URL = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEETS_ID}/export?format=csv&gid=0`;
+  <script>
+    let scriptUrl = 'https://script.google.com/macros/s/AKfycbwJejVgtbQUUxJC8sYx2bC1k-nKUFkanrBswL2TSXUdCdCUT5Dn3SQQaulXcaScM7AW1Q/exec';
+    let adminPassword = localStorage.getItem('constructionAdminPassword') || 'admin123';
+    let allData = [];
+    let currentBuilding = 'A棟';
 
-        // 初始化系統
-        async function initSystem() {
-            addLogEntry('系統初始化中...', 'info');
-            
-            try {
-                await initCharts();
-                await performSync();
-                startAutoSync();
-                startCountdown();
-                
-                addLogEntry('系統初始化完成，自動同步已啟動', 'success');
-            } catch (error) {
-                addLogEntry('系統初始化失敗: ' + error.message, 'error');
-            }
+    window.onload = function() {
+      const savedUrl = localStorage.getItem('constructionScriptUrl');
+      if (savedUrl) {
+        scriptUrl = savedUrl;
+        document.getElementById('setupNotice').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        loadData();
+        setInterval(loadData, 30000);
+      }
+    };
+
+    function saveScriptUrl() {
+      const url = document.getElementById('scriptUrl').value.trim();
+      if (!url) {
+        alert('請輸入 Google Apps Script 網址');
+        return;
+      }
+      
+      const password = document.getElementById('adminPassword').value.trim();
+      if (password) {
+        adminPassword = password;
+        localStorage.setItem('constructionAdminPassword', password);
+      }
+      
+      localStorage.setItem('constructionScriptUrl', url);
+      scriptUrl = url;
+      document.getElementById('setupNotice').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      loadData();
+    }
+
+    function showPasswordModal() {
+      document.getElementById('passwordModal').style.display = 'block';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('errorMessage').style.display = 'none';
+      setTimeout(() => {
+        document.getElementById('passwordInput').focus();
+      }, 100);
+    }
+
+    function closePasswordModal() {
+      document.getElementById('passwordModal').style.display = 'none';
+    }
+
+    function handlePasswordKeypress(event) {
+      if (event.key === 'Enter') {
+        verifyPassword();
+      }
+    }
+
+    function verifyPassword() {
+      const inputPassword = document.getElementById('passwordInput').value;
+      
+      if (inputPassword === adminPassword) {
+        closePasswordModal();
+        initializeData();
+      } else {
+        document.getElementById('errorMessage').style.display = 'block';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+      }
+    }
+
+    async function loadData() {
+      try {
+        document.getElementById('syncStatus').textContent = '同步中...';
+        
+        const response = await fetch(scriptUrl);
+        const result = await response.json();
+        
+        if (result.success) {
+          allData = result.data;
+          updateBuildingProgress();
+          renderCurrentBuilding();
+          document.getElementById('syncStatus').textContent = '已同步 ' + new Date().toLocaleTimeString();
         }
+      } catch (error) {
+        console.error('載入錯誤:', error);
+        document.getElementById('syncStatus').textContent = '同步失敗';
+      }
+    }
 
-        // 初始化圖表
-        async function initCharts() {
-            const ctx1 = document.getElementById('progressChart').getContext('2d');
-            progressChart = new Chart(ctx1, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: []
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: '工程進度比較 - 實際進度 vs 預定進度'
-                        },
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: '進度百分比 (%)'
-                            }
-                        }
-                    },
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeInOutQuart'
-                    }
-                }
-            });
-
-            const ctx2 = document.getElementById('differenceChart').getContext('2d');
-            differenceChart = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: []
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: '工程進度差異分析 (負值=落後，正值=超前)'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            title: {
-                                display: true,
-                                text: '進度差異 (%)'
-                            }
-                        }
-                    },
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeInOutQuart'
-                    }
-                }
-            });
-        }
-
-        // 執行同步
-        async function performSync() {
-            try {
-                addLogEntry('開始從Google Sheets同步數據...', 'info');
-                
-                const response = await fetch(SHEETS_CSV_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const csvText = await response.text();
-                const newData = parseCSV(csvText);
-                
-                if (newData.length === 0) {
-                    throw new Error('未找到有效數據');
-                }
-
-                // 檢查數據是否有變化
-                const hasChanges = detectChanges(newData);
-                
-                // 保存前一次的數據
-                previousData = [...projectData];
-                projectData = newData;
-                
-                updateChart();
-                updateTable();
-                updateLastUpdateTime();
-                
-                const changeInfo = hasChanges ? ` (檢測到 ${hasChanges} 項變更)` : ' (無變更)';
-                addLogEntry(`同步成功: 載入 ${newData.length} 筆數據${changeInfo}`, 'success');
-                
-            } catch (error) {
-                addLogEntry('同步失敗: ' + error.message, 'error');
-                console.error('同步錯誤:', error);
-            }
-        }
-
-        // 解析CSV數據
-        function parseCSV(csvText) {
-            const lines = csvText.split('\n');
-            const data = [];
-            
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-                
-                const columns = parseCSVLine(line);
-                if (columns.length >= 3) {
-                    const name = columns[0].replace(/"/g, '').trim();
-                    const actual = parseFloat(columns[1]) || 0;
-                    const planned = parseFloat(columns[2]) || 0;
-                    const difference = actual - planned;
-                    
-                    if (name) {
-                        data.push({
-                            name: name,
-                            actual: actual,
-                            planned: planned,
-                            difference: difference,
-                            lastUpdate: new Date().toLocaleString()
-                        });
-                    }
-                }
-            }
-            
-            return data;
-        }
-
-        // 解析CSV行（處理逗號在引號內的情況）
-        function parseCSVLine(line) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-            
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current);
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-            
-            result.push(current);
-            return result;
-        }
-
-        // 檢測數據變化
-        function detectChanges(newData) {
-            if (previousData.length === 0) return 0;
-            
-            let changes = 0;
-            
-            newData.forEach(newItem => {
-                const oldItem = previousData.find(item => item.name === newItem.name);
-                if (!oldItem) {
-                    changes++; // 新項目
-                } else if (
-                    oldItem.actual !== newItem.actual || 
-                    oldItem.planned !== newItem.planned
-                ) {
-                    changes++; // 數據變更
-                }
-            });
-            
-            return changes;
-        }
-
-        // 啟動自動同步
-        function startAutoSync() {
-            if (syncInterval) {
-                clearInterval(syncInterval);
-            }
-            
-            syncInterval = setInterval(async () => {
-                await performSync();
-                resetCountdown();
-            }, CONFIG.SYNC_INTERVAL);
-        }
-
-        // 啟動倒數計時
-        function startCountdown() {
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-            }
-            
-            countdownInterval = setInterval(() => {
-                nextUpdateCountdown--;
-                document.getElementById('nextUpdateIn').textContent = nextUpdateCountdown;
-                
-                if (nextUpdateCountdown <= 0) {
-                    resetCountdown();
-                }
-            }, 1000);
-        }
-
-        // 重置倒數計時
-        function resetCountdown() {
-            nextUpdateCountdown = CONFIG.SYNC_INTERVAL / 1000;
-            document.getElementById('nextUpdateIn').textContent = nextUpdateCountdown;
-        }
-
-        // 手動同步
-        async function manualSync() {
-            addLogEntry('執行手動同步...', 'info');
-            await performSync();
-            resetCountdown();
-        }
-
-        // 更新圖表
-        function updateChart() {
-            const chartType = document.getElementById('chartType').value;
-            const showActual = document.getElementById('showActual').checked;
-            const showPlanned = document.getElementById('showPlanned').checked;
-            const showDifference = document.getElementById('showDifference').checked;
-
-            const labels = projectData.map(item => item.name);
-            
-            // 更新進度圖表
-            progressChart.config.type = chartType;
-            progressChart.data.labels = labels;
-            progressChart.data.datasets = [];
-
-            if (showActual) {
-                progressChart.data.datasets.push({
-                    label: '實際進度',
-                    data: projectData.map(item => item.actual),
-                    backgroundColor: 'rgba(46, 134, 171, 0.8)',
-                    borderColor: 'rgba(46, 134, 171, 1)',
-                    borderWidth: 2,
-                    tension: 0.4
-                });
-            }
-
-            if (showPlanned) {
-                progressChart.data.datasets.push({
-                    label: '預定進度',
-                    data: projectData.map(item => item.planned),
-                    backgroundColor: 'rgba(162, 59, 114, 0.8)',
-                    borderColor: 'rgba(162, 59, 114, 1)',
-                    borderWidth: 2,
-                    tension: 0.4
-                });
-            }
-
-            if (showDifference) {
-                progressChart.data.datasets.push({
-                    label: '差異',
-                    data: projectData.map(item => item.difference),
-                    backgroundColor: 'rgba(255, 193, 7, 0.8)',
-                    borderColor: 'rgba(255, 193, 7, 1)',
-                    borderWidth: 2,
-                    tension: 0.4
-                });
-            }
-
-            // 更新差異圖表
-            differenceChart.data.labels = labels;
-            differenceChart.data.datasets = [{
-                label: '進度差異',
-                data: projectData.map(item => item.difference),
-                backgroundColor: projectData.map(item => 
-                    item.difference < -0.1 ? 'rgba(255, 107, 107, 0.8)' : 
-                    item.difference > 0.1 ? 'rgba(78, 205, 196, 0.8)' : 
-                    'rgba(108, 117, 125, 0.8)'
-                ),
-                borderColor: projectData.map(item => 
-                    item.difference < -0.1 ? 'rgba(255, 107, 107, 1)' : 
-                    item.difference > 0.1 ? 'rgba(78, 205, 196, 1)' : 
-                    'rgba(108, 117, 125, 1)'
-                ),
-                borderWidth: 2
-            }];
-
-            progressChart.update('active');
-            differenceChart.update('active');
-        }
-
-        // 更新數據表
-        function updateTable() {
-            const tbody = document.getElementById('tableBody');
-            const dataCount = document.getElementById('dataCount');
-            tbody.innerHTML = '';
-            
-            dataCount.textContent = `(${projectData.length} 項目)`;
-            
-            projectData.forEach((item, index) => {
-                const row = tbody.insertRow();
-                const status = getStatus(item.difference);
-                const statusClass = getStatusClass(item.difference);
-                const trend = getTrend(item, index);
-                
-                row.innerHTML = `
-                    <td style="text-align: left; font-weight: bold;">${item.name}</td>
-                    <td>${item.actual.toFixed(2)}</td>
-                    <td>${item.planned.toFixed(2)}</td>
-                    <td class="${item.difference < 0 ? 'negative' : 'positive'}">${item.difference.toFixed(2)}</td>
-                    <td><span class="status-indicator ${statusClass}">${status}</span></td>
-                    <td>${trend}</td>
-                `;
-            });
-        }
-
-        // 獲取趨勢
-        function getTrend(currentItem, index) {
-            if (previousData.length === 0) return '-';
-            
-            const previousItem = previousData.find(item => item.name === currentItem.name);
-            if (!previousItem) return '🆕';
-            
-            const actualChange = currentItem.actual - previousItem.actual;
-            const plannedChange = currentItem.planned - previousItem.planned;
-            
-            if (Math.abs(actualChange) < 0.01 && Math.abs(plannedChange) < 0.01) {
-                return '➡️';
-            } else if (actualChange > plannedChange) {
-                return '📈';
-            } else if (actualChange < plannedChange) {
-                return '📉';
-            } else {
-                return '🔄';
-            }
-        }
-
-        // 獲取狀態
-        function getStatus(difference) {
-            if (difference < -0.5) return '嚴重落後';
-            if (difference < -0.1) return '落後';
-            if (difference > 0.5) return '大幅超前';
-            if (difference > 0.1) return '超前';
-            return '正常';
-        }
-
-        // 獲取狀態樣式
-        function getStatusClass(difference) {
-            return difference < -0.1 ? 'status-behind' : 
-                   difference > 0.1 ? 'status-ahead' : 'status-normal';
-        }
-
-        // 更新最後更新時間
-        function updateLastUpdateTime() {
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
-        }
-
-        // 添加日誌記錄
-        function addLogEntry(message, type = 'info') {
-            const logContent = document.getElementById('syncLogContent');
-            const timestamp = new Date().toLocaleString();
-            const logClass = `log-${type}`;
-            
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${logClass}`;
-            entry.textContent = `[${timestamp}] ${message}`;
-            
-            logContent.insertBefore(entry, logContent.firstChild);
-            
-            // 限制日誌條目數量
-            const entries = logContent.querySelectorAll('.log-entry');
-            if (entries.length > CONFIG.MAX_LOG_ENTRIES) {
-                entries[entries.length - 1].remove();
-            }
-        }
-
-        // 匯出功能
-        function exportChart() {
-            const link = document.createElement('a');
-            link.download = `工程進度圖表_${new Date().toISOString().split('T')[0]}.png`;
-            link.href = progressChart.toBase64Image();
-            link.click();
-        }
-
-        function exportData() {
-            let csv = '\uFEFF工程項目,實際進度(%),預定進度(%),差異(%),狀態,最後更新\n';
-            projectData.forEach(item => {
-                const status = getStatus(item.difference);
-                csv += `"${item.name}",${item.actual},${item.planned},${item.difference},"${status}","${item.lastUpdate}"\n`;
-            });
-            
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `工程進度數據_${new Date().toISOString().split('T')[0]}.csv`;
-            link.click();
-        }
-
-        // 頁面載入時啟動系統
-        window.onload = function() {
-            initSystem();
-        };
-
-        // 頁面卸載時清理
-        window.onbeforeunload = function() {
-            if (syncInterval) clearInterval(syncInterval);
-            if (countdownInterval) clearInterval(countdownInterval);
-        };
-
-        // 處理頁面可見性變化（當頁面重新可見時立即同步）
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) {
-                addLogEntry('頁面重新可見，執行即時同步', 'info');
-                performSync();
-            }
+    async function initializeData() {
+      try {
+        document.getElementById('syncStatus').textContent = '初始化中...';
+        
+        const response = await fetch(scriptUrl, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'initialize' })
         });
-    </script>
+        
+        const result = await response.json();
+        if (result.success) {
+          alert('初始化成功：' + result.message);
+          loadData();
+        } else {
+          alert('初始化失敗：' + result.error);
+        }
+      } catch (error) {
+        alert('初始化失敗：' + error);
+      }
+    }
+
+    function switchBuilding(building) {
+      currentBuilding = building;
+      document.querySelectorAll('.building-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelector(`[data-building="${building}"]`).classList.add('active');
+      renderCurrentBuilding();
+    }
+
+    function updateBuildingProgress() {
+      ['A棟', 'B棟', 'C棟'].forEach(building => {
+        const buildingData = allData.filter(d => d['棟別'] === building);
+        const total = buildingData.reduce((sum, item) => {
+          return sum + (parseFloat(item['完成百分比']) || 0);
+        }, 0);
+        const avg = buildingData.length > 0 ? Math.round(total / buildingData.length) : 0;
+        
+        const id = building.charAt(0);
+        document.getElementById(`progress${id}`).textContent = avg + '%';
+      });
+    }
+
+    function getPercentageClass(percentage) {
+      if (percentage === 100) return 'complete';
+      if (percentage > 0) return 'progress';
+      return 'pending';
+    }
+
+    function getInspectionClass(inspectionStatus) {
+      if (inspectionStatus && inspectionStatus.includes('已查驗')) return 'inspected';
+      return 'not-inspected';
+    }
+
+    function renderCurrentBuilding() {
+      const floorFilter = document.getElementById('floorFilter').value;
+      const categoryFilter = document.getElementById('categoryFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+      
+      let filteredData = allData.filter(d => d['棟別'] === currentBuilding);
+      
+      if (floorFilter !== 'all') {
+        filteredData = filteredData.filter(d => d['樓層'] === floorFilter);
+      }
+      
+      if (categoryFilter !== 'all') {
+        filteredData = filteredData.filter(d => d['項目類別'] === categoryFilter);
+      }
+
+      const groupedByFloor = {};
+      filteredData.forEach(item => {
+        const floor = item['樓層'];
+        if (!groupedByFloor[floor]) groupedByFloor[floor] = {};
+        
+        const category = item['項目類別'];
+        if (!groupedByFloor[floor][category]) groupedByFloor[floor][category] = [];
+        
+        groupedByFloor[floor][category].push(item);
+      });
+
+      const container = document.getElementById('unitsContainer');
+      container.innerHTML = '';
+
+      const floors = ['RF', '14F', '13F', '12F', '11F', '10F', '9F', '8F', '7F', '6F', '5F', '4F', '3F', '2F', '1F', 'B1F'];
+      
+      floors.forEach(floor => {
+        if (!groupedByFloor[floor]) return;
+
+        const floorSection = document.createElement('div');
+        floorSection.className = 'floor-section';
+        floorSection.innerHTML = `<div class="floor-title">${floor}</div>`;
+
+        const unitsGrid = document.createElement('div');
+        unitsGrid.className = 'units-grid';
+
+        Object.keys(groupedByFloor[floor]).forEach(category => {
+          const items = groupedByFloor[floor][category];
+          const totalPercentage = items.reduce((sum, item) => sum + parseFloat(item['完成百分比'] || 0), 0);
+          const avgProgress = Math.round(totalPercentage / items.length);
+          const status = avgProgress === 100 ? 'complete' : avgProgress > 0 ? 'progress' : 'pending';
+          
+          if (statusFilter !== 'all' && status !== statusFilter) return;
+
+          const statusClass = `status-${status}`;
+          const statusText = status === 'complete' ? '已完成' : status === 'progress' ? '進行中' : '未開始';
+
+          const unitCard = document.createElement('div');
+          unitCard.className = 'unit-card';
+          unitCard.dataset.floor = floor;
+          unitCard.dataset.status = status;
+          unitCard.dataset.category = category;
+
+          let checklistHtml = '';
+          items.forEach((item, i) => {
+            const percentage = parseFloat(item['完成百分比']) || 0;
+            const percentClass = getPercentageClass(percentage);
+            const inspectionStatus = item['查驗狀態'] || '';
+            const inspectionClass = getInspectionClass(inspectionStatus);
+            const inspectionValue = inspectionStatus.includes('已查驗') ? 'inspected' : 'not-inspected';
+            
+            const selectId = `select-${floor}-${category}-${i}`;
+            const inspectionId = `inspection-${floor}-${category}-${i}`;
+            
+            const itemName = item['項目名稱'];
+            
+            checklistHtml += `
+              <li>
+                <div class="item-row">
+                  <div class="item-name">${itemName}</div>
+                  <div class="item-controls">
+                    <select id="${selectId}" 
+                      class="percentage-select ${percentClass}"
+                      onchange="updateItemPercentage('${currentBuilding}', '${floor}', '${itemName}', this.value)">
+                      <option value="0" ${percentage === 0 ? 'selected' : ''}>0%</option>
+                      <option value="20" ${percentage === 20 ? 'selected' : ''}>20%</option>
+                      <option value="40" ${percentage === 40 ? 'selected' : ''}>40%</option>
+                      <option value="60" ${percentage === 60 ? 'selected' : ''}>60%</option>
+                      <option value="80" ${percentage === 80 ? 'selected' : ''}>80%</option>
+                      <option value="100" ${percentage === 100 ? 'selected' : ''}>100%</option>
+                    </select>
+                    <select id="${inspectionId}"
+                      class="inspection-select ${inspectionClass}"
+                      onchange="updateInspectionStatus('${currentBuilding}', '${floor}', '${itemName}', this.value)">
+                      <option value="not-inspected" ${inspectionValue === 'not-inspected' ? 'selected' : ''}>未查驗</option>
+                      <option value="inspected" ${inspectionValue === 'inspected' ? 'selected' : ''}>已查驗</option>
+                    </select>
+                  </div>
+                </div>
+              </li>
+            `;
+          });
+
+          const lastUpdate = items[0]['更新時間'] || '';
+
+          unitCard.innerHTML = `
+            <div class="unit-header">
+              <div>
+                <div class="unit-title">${category}</div>
+                <span class="status-badge ${statusClass}">${statusText}</span>
+                ${lastUpdate ? `<div class="last-update">${lastUpdate}</div>` : ''}
+              </div>
+              <div class="unit-progress">${avgProgress}%</div>
+            </div>
+            <ul class="checklist">
+              ${checklistHtml}
+            </ul>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${avgProgress}%"></div>
+            </div>
+          `;
+
+          unitsGrid.appendChild(unitCard);
+        });
+
+        floorSection.appendChild(unitsGrid);
+        container.appendChild(floorSection);
+      });
+
+      updateStats(filteredData);
+    }
+
+    async function updateItemPercentage(building, floor, itemName, percentage) {
+      try {
+        const percentValue = parseInt(percentage);
+        
+        const response = await fetch(scriptUrl, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'update',
+            building: building,
+            floor: floor,
+            itemName: itemName,
+            percentage: percentValue
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          const item = allData.find(d => 
+            d['棟別'] === building && 
+            d['樓層'] === floor && 
+            d['項目名稱'] === itemName
+          );
+          if (item) {
+            item['完成百分比'] = percentValue;
+            item['更新時間'] = new Date().toLocaleString('zh-TW');
+          }
+          updateBuildingProgress();
+          renderCurrentBuilding();
+        } else {
+          alert('更新失敗：' + result.error);
+        }
+      } catch (error) {
+        console.error('更新錯誤:', error);
+        alert('更新失敗：' + error);
+      }
+    }
+
+    async function updateInspectionStatus(building, floor, itemName, status) {
+      try {
+        const inspectionStatus = status === 'inspected' ? '已查驗' : '';
+        
+        const response = await fetch(scriptUrl, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'updateRemark',
+            building: building,
+            floor: floor,
+            itemName: itemName,
+            remark: inspectionStatus
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          const item = allData.find(d => 
+            d['棟別'] === building && 
+            d['樓層'] === floor && 
+            d['項目名稱'] === itemName
+          );
+          if (item) {
+            item['查驗狀態'] = inspectionStatus;
+            item['更新時間'] = new Date().toLocaleString('zh-TW');
+          }
+          renderCurrentBuilding();
+        } else {
+          alert('更新查驗狀態失敗：' + result.error);
+        }
+      } catch (error) {
+        console.error('更新查驗狀態錯誤:', error);
+        alert('更新查驗狀態失敗：' + error);
+      }
+    }
+
+    function updateStats(data) {
+      const completed = data.filter(item => parseFloat(item['完成百分比']) === 100).length;
+      const progress = data.filter(item => {
+        const p = parseFloat(item['完成百分比']);
+        return p > 0 && p < 100;
+      }).length;
+
+      const total = data.reduce((sum, item) => sum + parseFloat(item['完成百分比'] || 0), 0);
+      const avg = data.length > 0 ? Math.round(total / data.length) : 0;
+
+      document.getElementById('currentProgress').textContent = avg + '%';
+      document.getElementById('currentProgressBar').style.width = avg + '%';
+      document.getElementById('completedItems').textContent = completed;
+      document.getElementById('progressItems').textContent = progress;
+      document.getElementById('totalItems').textContent = data.length;
+    }
+
+    function filterUnits() {
+      renderCurrentBuilding();
+    }
+
+    function refreshData() {
+      loadData();
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('passwordModal');
+      if (event.target === modal) {
+        closePasswordModal();
+      }
+    }
+  </script>
 </body>
 </html>
-
-
-

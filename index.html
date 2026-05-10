@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>永青營造-施工進度回報系統</title>
+  <title>南一處-施工進度回報管理系統</title>
   <style>
     * {
       margin: 0;
@@ -73,10 +73,6 @@
       display: flex;
       align-items: center;
       gap: 6px;
-    }
-
-    .lock-icon {
-      font-size: 14px;
     }
 
     .btn {
@@ -395,28 +391,6 @@
       border-left: 5px solid #e74c3c;
     }
 
-    .setup-notice {
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    .setup-notice h3 {
-      color: #856404;
-      margin-bottom: 10px;
-      font-size: 16px;
-    }
-
-    .setup-notice input {
-      width: 100%;
-      padding: 8px;
-      margin: 10px 0;
-      border: 1px solid #ffc107;
-      border-radius: 3px;
-      font-size: 13px;
-    }
-
     .last-update {
       font-size: 10px;
       color: #95a5a6;
@@ -519,8 +493,8 @@
 </head>
 <body>
   <div class="header">
-    <h1> 南一處-施工進度回報管控系統</h1>
-    <p>前鎮亞灣智慧公宅(第一期)新建統包工程</p>
+    <h1>永青營造-南一處亞灣工務所製</h1>
+    <p>施工進度回報及管理系統</p>
     <div class="header-controls">
       <div style="display: flex; gap: 10px; align-items: center;">
         <div class="sync-status">
@@ -528,7 +502,6 @@
           <span id="syncStatus">已連線</span>
         </div>
         <div class="lock-status">
-          <span class="lock-icon" id="lockIcon"></span>
           <span id="lockStatus">唯讀模式</span>
         </div>
       </div>
@@ -544,7 +517,6 @@
   <div id="passwordModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <span style="font-size: 24px;">⚠</span>
         <h2>初始化確認</h2>
       </div>
       <div class="modal-body">
@@ -564,7 +536,6 @@
   <div id="unlockModal" class="modal">
     <div class="modal-content">
       <div class="modal-header success">
-        <span style="font-size: 24px;"></span>
         <h2>編輯權限驗證</h2>
       </div>
       <div class="modal-body">
@@ -582,23 +553,7 @@
     </div>
   </div>
 
-  <div class="setup-notice" id="setupNotice">
-    <h3>系統設置</h3>
-    <p><strong>請輸入 Google Apps Script 網址：</strong></p>
-    <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec" value="https://script.google.com/macros/s/AKfycbwJejVgtbQUUxJC8sYx2bC1k-nKUFkanrBswL2TSXUdCdCUT5Dn3SQQaulXcaScM7AW1Q/exec">
-    <button class="btn btn-primary" onclick="saveScriptUrl()">儲存設定</button>
-    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ffc107;">
-      <p><strong>設定管理員密碼（用於初始化）：</strong></p>
-      <input type="password" id="adminPassword" placeholder="預設密碼：a03751">
-      <p><strong>設定編輯密碼（用於日常編輯）：</strong></p>
-      <input type="password" id="editPassword" placeholder="預設密碼：0857">
-      <p style="font-size: 11px; color: #856404; margin-top: 5px;">
-        建議設定不同的密碼以區分權限
-      </p>
-    </div>
-  </div>
-
-  <div id="mainContent" style="display: none;">
+  <div id="mainContent">
     <div class="building-tabs">
       <div class="building-tab active" data-building="A棟" onclick="switchBuilding('A棟')">
         <div>A棟</div>
@@ -690,51 +645,21 @@
   </div>
 
   <script>
-    let scriptUrl = 'https://script.google.com/macros/s/AKfycbwJejVgtbQUUxJC8sYx2bC1k-nKUFkanrBswL2TSXUdCdCUT5Dn3SQQaulXcaScM7AW1Q/exec';
-    let adminPassword = localStorage.getItem('constructionAdminPassword') || 'admin123';
-    let editPassword = localStorage.getItem('constructionEditPassword') || 'edit123';
+    // 預設配置
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwJejVgtbQUUxJC8sYx2bC1k-nKUFkanrBswL2TSXUdCdCUT5Dn3SQQaulXcaScM7AW1Q/exec';
+    const adminPassword = 'admin123';
+    const editPassword = 'edit123';
+    
     let allData = [];
     let currentBuilding = 'A棟';
     let isUnlocked = false;
     let unlockTimer = null;
 
     window.onload = function() {
-      const savedUrl = localStorage.getItem('constructionScriptUrl');
-      if (savedUrl) {
-        scriptUrl = savedUrl;
-        document.getElementById('setupNotice').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        loadData();
-        setInterval(loadData, 30000);
-        checkUnlockStatus();
-      }
-    };
-
-    function saveScriptUrl() {
-      const url = document.getElementById('scriptUrl').value.trim();
-      if (!url) {
-        alert('請輸入 Google Apps Script 網址');
-        return;
-      }
-      
-      const adminPwd = document.getElementById('adminPassword').value.trim();
-      if (adminPwd) {
-        adminPassword = adminPwd;
-        localStorage.setItem('constructionAdminPassword', adminPwd);
-      }
-
-      const editPwd = document.getElementById('editPassword').value.trim();
-      if (editPwd) {
-        editPassword = editPwd;
-        localStorage.setItem('constructionEditPassword', editPwd);
-      }
-      
-      localStorage.setItem('constructionScriptUrl', url);
-      scriptUrl = url;
-      document.getElementById('setupNotice').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
       loadData();
-    }
+      setInterval(loadData, 30000);
+      checkUnlockStatus();
+    };
 
     function showPasswordModal() {
       document.getElementById('passwordModal').style.display = 'block';
@@ -811,7 +736,6 @@
       const unlockTime = new Date().getTime();
       localStorage.setItem('constructionUnlockTime', unlockTime);
       
-      document.getElementById('lockIcon').textContent = '';
       document.getElementById('lockStatus').textContent = '編輯模式';
       document.getElementById('unlockBtn').textContent = '鎖定系統';
       document.getElementById('unlockBtn').className = 'btn btn-danger';
@@ -822,14 +746,13 @@
       unlockTimer = setTimeout(() => {
         lockSystem();
         alert('編輯時間已到，系統已自動鎖定');
-      }, 30 * 60 * 1000); // 30分鐘
+      }, 30 * 60 * 1000);
     }
 
     function lockSystem() {
       isUnlocked = false;
       localStorage.removeItem('constructionUnlockTime');
       
-      document.getElementById('lockIcon').textContent = '';
       document.getElementById('lockStatus').textContent = '唯讀模式';
       document.getElementById('unlockBtn').textContent = '解除鎖定';
       document.getElementById('unlockBtn').className = 'btn btn-warning';
@@ -849,7 +772,6 @@
         const elapsed = now - parseInt(unlockTime);
         if (elapsed < 30 * 60 * 1000) {
           isUnlocked = true;
-          document.getElementById('lockIcon').textContent = '';
           document.getElementById('lockStatus').textContent = '編輯模式';
           document.getElementById('unlockBtn').textContent = '鎖定系統';
           document.getElementById('unlockBtn').className = 'btn btn-danger';

@@ -528,7 +528,7 @@
           <span id="syncStatus">已連線</span>
         </div>
         <div class="lock-status">
-          <span class="lock-icon" id="lockIcon">🔒</span>
+          <span class="lock-icon" id="lockIcon"></span>
           <span id="lockStatus">唯讀模式</span>
         </div>
       </div>
@@ -564,7 +564,7 @@
   <div id="unlockModal" class="modal">
     <div class="modal-content">
       <div class="modal-header success">
-        <span style="font-size: 24px;">🔓</span>
+        <span style="font-size: 24px;"></span>
         <h2>編輯權限驗證</h2>
       </div>
       <div class="modal-body">
@@ -589,9 +589,9 @@
     <button class="btn btn-primary" onclick="saveScriptUrl()">儲存設定</button>
     <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ffc107;">
       <p><strong>設定管理員密碼（用於初始化）：</strong></p>
-      <input type="password" id="adminPassword" placeholder="預設密碼：admin123">
+      <input type="password" id="adminPassword" placeholder="預設密碼：a03751">
       <p><strong>設定編輯密碼（用於日常編輯）：</strong></p>
-      <input type="password" id="editPassword" placeholder="預設密碼：edit123">
+      <input type="password" id="editPassword" placeholder="預設密碼：0857">
       <p style="font-size: 11px; color: #856404; margin-top: 5px;">
         建議設定不同的密碼以區分權限
       </p>
@@ -811,7 +811,7 @@
       const unlockTime = new Date().getTime();
       localStorage.setItem('constructionUnlockTime', unlockTime);
       
-      document.getElementById('lockIcon').textContent = '🔓';
+      document.getElementById('lockIcon').textContent = '';
       document.getElementById('lockStatus').textContent = '編輯模式';
       document.getElementById('unlockBtn').textContent = '鎖定系統';
       document.getElementById('unlockBtn').className = 'btn btn-danger';
@@ -829,7 +829,7 @@
       isUnlocked = false;
       localStorage.removeItem('constructionUnlockTime');
       
-      document.getElementById('lockIcon').textContent = '🔒';
+      document.getElementById('lockIcon').textContent = '';
       document.getElementById('lockStatus').textContent = '唯讀模式';
       document.getElementById('unlockBtn').textContent = '解除鎖定';
       document.getElementById('unlockBtn').className = 'btn btn-warning';
@@ -849,7 +849,7 @@
         const elapsed = now - parseInt(unlockTime);
         if (elapsed < 30 * 60 * 1000) {
           isUnlocked = true;
-          document.getElementById('lockIcon').textContent = '🔓';
+          document.getElementById('lockIcon').textContent = '';
           document.getElementById('lockStatus').textContent = '編輯模式';
           document.getElementById('unlockBtn').textContent = '鎖定系統';
           document.getElementById('unlockBtn').className = 'btn btn-danger';

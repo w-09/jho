@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>南一處-施工進度回報管理系統</title>
+  <title>永青營造施工進度管理系統</title>
   <style>
     * {
       margin: 0;
@@ -493,8 +493,8 @@
 </head>
 <body>
   <div class="header">
-    <h1>永青營造-南一處亞灣工務所製</h1>
-    <p>施工進度回報及管理系統</p>
+    <h1南一處-亞灣工務所 製</h1>
+    <p>前鎮亞灣智慧公宅(第一期)新建統包工程</p>
     <div class="header-controls">
       <div style="display: flex; gap: 10px; align-items: center;">
         <div class="sync-status">
@@ -647,8 +647,17 @@
   <script>
     // 預設配置
     const scriptUrl = 'https://script.google.com/macros/s/AKfycbwJejVgtbQUUxJC8sYx2bC1k-nKUFkanrBswL2TSXUdCdCUT5Dn3SQQaulXcaScM7AW1Q/exec';
-    const adminPassword = 'a03751';'a00001';
-    const editPassword = 'edit123';
+    
+    // 管理員密碼（用於初始化）
+    const adminPassword = 'a03751';
+    
+    // 編輯密碼列表（可設定多組）
+    const editPasswords = [
+      'a00001',    // 密碼1
+      'a00002',    // 密碼2
+      'a00003',    // 密碼3
+      'edit123'    // 密碼4
+    ];
     
     let allData = [];
     let currentBuilding = 'A棟';
@@ -721,7 +730,8 @@
     function verifyUnlock() {
       const inputPassword = document.getElementById('unlockPasswordInput').value;
       
-      if (inputPassword === editPassword) {
+      // 檢查是否符合任一組編輯密碼
+      if (editPasswords.includes(inputPassword)) {
         closeUnlockModal();
         unlockSystem();
       } else {

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>南一處工務所</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
+    body {
+      background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+    .logo-wrap img {
+      height: 70px;
+      margin-bottom: 12px;
+      filter: brightness(0) invert(1);
+    }
+    .logo-wrap h1 { color: white; font-size: 24px; font-weight: 700; letter-spacing: 2px; }
+    .logo-wrap p { color: rgba(255,255,255,0.75); font-size: 14px; margin-top: 6px; }
+    .card-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 700px;
+    }
+    .entry-card {
+      background: white;
+      border-radius: 16px;
+      padding: 36px 28px;
+      width: 280px;
+      text-align: center;
+      text-decoration: none;
+      color: #333;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      transition: transform 0.25s, box-shadow 0.25s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .entry-card:hover { transform: translateY(-8px); box-shadow: 0 16px 40px rgba(0,0,0,0.25); }
+    .entry-card .icon-wrap {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .entry-card.yawan .icon-wrap { background: linear-gradient(135deg, #1a73e8, #42a5f5); }
+    .entry-card.shengli .icon-wrap { background: linear-gradient(135deg, #3e9956, #66bb6a); }
+    .entry-card .icon-wrap i { font-size: 36px; color: white; }
+    .entry-card h2 { font-size: 22px; font-weight: 700; color: #222; }
+    .entry-card p { font-size: 13px; color: #888; line-height: 1.6; }
+    .entry-card .arrow {
+      margin-top: 6px; font-size: 13px; font-weight: 500;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .entry-card.yawan .arrow { color: #1a73e8; }
+    .entry-card.shengli .arrow { color: #3e9956; }
+    .footer { margin-top: 40px; color: rgba(255,255,255,0.5); font-size: 12px; }
+    @media (max-width: 600px) {
+      .entry-card { width: 100%; max-width: 340px; }
+      .logo-wrap h1 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-wrap">
+    <img src="https://i.postimg.cc/ZKWfsQD9/Logo-02-0.png" alt="Logo">
+    <h1>南一處工務所</h1>
+    <p>請選擇您要進入的工地</p>
+  </div>
+  <div class="card-container">
+    <a href="yawan.html" class="entry-card yawan">
+      <div class="icon-wrap"><i class="material-icons">domain</i></div>
+      <h2>亞灣工地</h2>
+      <p>亞灣社宅工程<br>施工組・品管組・行政組</p>
+      <div class="arrow"><span>進入</span><i class="material-icons" style="font-size:16px;">arrow_forward</i></div>
+    </a>
+    <a href="shengli.html" class="entry-card shengli">
+      <div class="icon-wrap"><i class="material-icons">apartment</i></div>
+      <h2>勝利安居</h2>
+      <p>勝利安居工程<br>施工組・品管組・職安組</p>
+      <div class="arrow"><span>進入</span><i class="material-icons" style="font-size:16px;">arrow_forward</i></div>
+    </a>
+  </div>
+  <div class="footer">© 2026 南一處工務所</div>
+</body>
+</html>

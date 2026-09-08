@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>南一處-亞灣工地</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
+    body { background-color: #f5f5f5; color: #333; padding-top: 60px; padding-bottom: 70px; }
+    .header { position: fixed; top: 0; left: 0; right: 0; height: 60px; background-color: #1a73e8; color: white; display: flex; align-items: center; padding: 0 10px; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .back-btn { color: white; text-decoration: none; display: flex; align-items: center; margin-right: 8px; }
+    .header-content { display: flex; align-items: center; flex: 1; justify-content: center; }
+    .header-logo { height: 40px; margin-right: 10px; }
+    .header h1 { font-size: 20px; font-weight: 500; }
+    .container { max-width: 800px; margin: 0 auto; padding: 15px; }
+    .card { background-color: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    h2 { font-size: 18px; margin-bottom: 15px; color: #1a73e8; display: flex; align-items: center; }
+    h2 .material-icons { margin-right: 5px; font-size: 20px; }
+    .bulletin-entry { background-color: #f9f9f9; border-left: 5px solid #3e9956; padding: 15px; margin-bottom: 15px; border-radius: 5px; transition: all 0.3s ease; }
+    .bulletin-entry:hover { transform: translateX(10px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .loading { text-align: center; color: #3e9956; padding: 20px; font-size: 16px; }
+    .entry-title { font-weight: bold; color: #2c7a3f; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+    .entry-content { color: #333; margin-bottom: 10px; }
+    .entry-date { color: #888; text-align: right; font-size: 0.8em; }
+    .view-more-btn { display: block; text-align: center; padding: 10px; background-color: #f5f5f5; color: #1a73e8; border-radius: 5px; margin-top: 10px; text-decoration: none; font-weight: 500; transition: background-color 0.3s; }
+    .view-more-btn:hover { background-color: #e0e0e0; }
+    .countdown-timer { text-align: center; padding: 15px; background-color: #f8f9fa; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e0e0e0; }
+    .countdown-timer h3 { margin-bottom: 10px; color: #1a73e8; }
+    .countdown-timer .timer { display: flex; justify-content: center; gap: 15px; }
+    .countdown-timer .time-block { display: flex; flex-direction: column; align-items: center; }
+    .countdown-timer .time-value { font-size: 24px; font-weight: bold; background-color: #1a73e8; color: white; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 5px; }
+    .countdown-timer .time-label { margin-top: 5px; font-size: 12px; color: #666; }
+    .btn-container { display: flex; flex-direction: column; gap: 20px; }
+    .btn-group { display: flex; flex-direction: column; gap: 10px; }
+    .btn { display: block; background-color: #1a73e8; color: white; padding: 12px 15px; border-radius: 8px; text-decoration: none; text-align: center; font-weight: 500; transition: background-color 0.3s; }
+    .btn:hover { background-color: #1557b0; }
+    .error-message { background-color: #ffebee; color: #c62828; padding: 15px; border-radius: 5px; text-align: center; margin: 10px 0; }
+    .debug-info { background-color: #e3f2fd; color: #1565c0; padding: 10px; border-radius: 5px; font-size: 12px; margin: 10px 0; font-family: monospace; }
+    .retry-btn { background-color: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+    .retry-btn:hover { background-color: #45a049; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background-color: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 4px rgba(0,0,0,0.1); z-index: 1000; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: #666; text-decoration: none; font-size: 12px; }
+    .nav-item.active { color: #1a73e8; }
+    .nav-item i { font-size: 24px; margin-bottom: 4px; }
+    @media (max-width: 768px) {
+      .btn-container { flex-direction: column; }
+      .btn-group { width: 100%; }
+      .countdown-timer .timer { flex-wrap: wrap; }
+      .countdown-timer .time-value { width: 40px; height: 40px; font-size: 18px; }
+      .header-logo { height: 30px; }
+      .header h1 { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="index.html" class="back-btn"><i class="material-icons">arrow_back</i></a>
+    <div class="header-content">
+      <img src="https://i.postimg.cc/ZKWfsQD9/Logo-02-0.png" alt="Logo" class="header-logo">
+      <h1>亞灣工地</h1>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <section id="countdown">
+      <h2><i class="material-icons">timer</i> 工期倒數</h2>
+      <div class="card">
+        <div class="countdown-timer">
+          <h3>工程預計完工時間</h3>
+          <div class="timer">
+            <div class="time-block"><div id="days" class="time-value">00</div><div class="time-label">天</div></div>
+            <div class="time-block"><div id="hours" class="time-value">00</div><div class="time-label">時</div></div>
+            <div class="time-block"><div id="minutes" class="time-value">00</div><div class="time-label">分</div></div>
+            <div class="time-block"><div id="seconds" class="time-value">00</div><div class="time-label">秒</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="bulletin">
+      <h2><i class="material-icons">campaign</i> 最新公告</h2>
+      <div class="card">
+        <div id="bulletin-entries" class="loading">載入公告中...</div>
+        <div id="debug-info" class="debug-info" style="display:none;"></div>
+        <button id="retry-btn" class="retry-btn" style="display:none;" onclick="fetchBulletinEntries()">重新載入</button>
+        <button id="demo-btn" class="retry-btn" onclick="loadDemoData()">載入示範資料</button>
+        <a href="#" id="view-more-btn" class="view-more-btn" style="display:none;">查看更多公告</a>
+      </div>
+    </section>
+
+    <section id="departments">
+      <h2><i class="material-icons">business</i> 亞灣社宅</h2>
+      <div class="card">
+        <div class="btn-container">
+          <div class="btn-group">
+            <p style="color:#1a73e8;font-size:18px;margin-bottom:10px;">施工組</p>
+            <a href="https://docs.google.com/spreadsheets/d/1_jZbDPtyy7cO3cA0VwdrQGD6sbkIz0tzjLnnktIbVFw/edit?gid=0#gid=0" class="btn">機關日報</a>
+            <a href="https://docs.google.com/spreadsheets/d/12m5vT10qJaHwk5ekftoGvM0w0IQyCuHn8rOTXyHafCQ/edit?usp=sharing" class="btn">查驗白板專區</a>
+            <a href="https://docs.google.com/spreadsheets/d/1BxXg5jEgVMVnT5uBZGIEUoEs7GHX90Aent1j9mCZWD8/edit?gid=0#gid=0" class="btn">施工自主查驗(結構)</a>
+            <a href="https://docs.google.com/spreadsheets/d/1lJvblrFYJObHKHwMvFmxRcKqy3Atdogr4g59ZpLNOQ4/edit?gid=1474171117#gid=1474171117" class="btn">施工自主查驗(裝修)</a>
+            <a href="https://docs.google.com/spreadsheets/d/1RoX65BU35Y70dzX3E_sZBHWVHhMM2ZZjK2R36FeimDg/edit?gid=0#gid=0" class="btn">自檢附件</a>
+            <a href="https://docs.google.com/spreadsheets/d/1JaZEKyh_M6bWk_I3p-jWH1cL6htITDyfzwwzSb3mbcc/edit?gid=442371140#gid=442371140" class="btn">混凝土澆置統計</a>
+            <a href="https://docs.google.com/spreadsheets/d/1LtNOr7zsmdIlIMaf4jUn77W6LCdlxh3rcCXPcvXafkw/edit?gid=0#gid=0" class="btn">缺失改善紀錄</a>
+            <a href="https://docs.google.com/spreadsheets/d/1QP7HbrNo5MCdGsvQsY1hUy2ufkkg3hwsgfDL917FkBo/edit?gid=0#gid=0" class="btn">施工進度取線圖</a>
+            <a href="https://w-09.github.io/form/Untitled-1.html" class="btn">每日進場人數回報</a>
+            <a href="https://docs.google.com/spreadsheets/d/14bCNRHbODeUyE_SoTtciLrtRKutp8AFP7W0S_KJQPPg/edit?gid=250419685#gid=250419685" class="btn">施工圖圖控</a>
+          </div>
+          <div class="btn-group">
+            <p style="color:#1a73e8;font-size:18px;margin-bottom:10px;">品管組</p>
+            <a href="https://docs.google.com/spreadsheets/d/13dLwyMfSB_O8V2oHDqnUeV__RnNFalBGPllYWnyXaPw/edit?gid=0#gid=0" class="btn">混凝土澆置時間紀錄(1)</a>
+            <a href="https://docs.google.com/spreadsheets/d/120XZPrVJ45FkId1PKj4Weov0lcDOhBsThOSnPlg3A3A/edit?usp=sharing" class="btn">混凝土澆置時間紀錄(2)</a>
+            <a href="https://docs.google.com/spreadsheets/d/1ymHlbXo8yzJ8XCd9djMdBSwjwIqwsGdUfdDd4OE8nio/edit?gid=281744822#gid=281744822" class="btn">收/發文紀錄</a>
+            <a href="https://docs.google.com/spreadsheets/d/13Zf7l9bKjapzaQGxyRAc-qeVmdWNmFhGxPd2ziPnEJw/edit?gid=0#gid=0" class="btn">工程相關人員督導紀錄</a>
+            <a href="https://docs.google.com/spreadsheets/d/1i1TBepz7SEm0KRRCbRYntfTcCA7ZKUgRRwDaWJ1nMqU/edit?gid=1342178985#gid=1342178985" class="btn">矯正預防/永青自主缺失統計</a>
+            <a href="https://docs.google.com/spreadsheets/d/1MK7jePCQ2Yjm26yTVvdctfMCOfXwiGLiSxy-LPc3ERc/edit?gid=1616629558#gid=1616629558" class="btn">材料設備統計表/申請單</a>
+            <a href="https://docs.google.com/spreadsheets/d/1jGyNGEpeTM8yM0IWz9D05B4Ulze1sWEI4A1RXJcTkLw/edit?gid=2030997060#gid=2030997060" class="btn">材料數量查詢系統</a>
+            <a href="https://docs.google.com/spreadsheets/d/1c5S8atUiWVK0jWNyt4P2bLRuisoKJFOadOuKEyCs9C0/edit?gid=0#gid=0" class="btn">各期估驗計價</a>
+            <a href="https://docs.google.com/spreadsheets/d/15upHRzj2BciKvpJaTAXYmYF9JkKQIyGE5iJFfRYFCm8/edit?gid=1766218997#gid=1766218997" class="btn">管制總表</a>
+          </div>
+          <div class="btn-group">
+            <p style="color:#1a73e8;font-size:18px;margin-bottom:10px;">行政組</p>
+            <a href="https://docs.google.com/spreadsheets/d/1DZa-5tN-KdqLg9TXe-YYKJ-qjJl5MB5bF_MU0RCj_iY/edit?gid=0#gid=0" class="btn">亞灣通訊錄</a>
+            <a href="https://docs.google.com/spreadsheets/d/1WnxDDYCBhcXql9HOzusgs87ief0tVv4TbFLI_OBetGo/edit?gid=0#gid=0" class="btn">公告管理表</a>
+            <a href="https://docs.google.com/spreadsheets/d/1vSwKgZISco6nhpjVpawJizrPLsLTBsN4psA4dgGtWc4/edit?gid=0#gid=0" class="btn">每日進場人員查詢</a>
+            <a href="https://w-09.github.io/jho/index.html" class="btn">進度圖表</a>
+            <a href="https://w-09.github.io/-/mon.html" class="btn">收支請款圖表</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <i class="material-icons">home</i>
+      <span>首頁</span>
+    </a>
+    <a href="#bulletin" class="nav-item active">
+      <i class="material-icons">campaign</i>
+      <span>公告</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="material-icons">description</i>
+      <span>文件</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="material-icons">person</i>
+      <span>個人</span>
+    </a>
+  </nav>
+
+  <script>
+    const CSV_URLS = [
+      'https://docs.google.com/spreadsheets/d/e/2PACX-1vRC4HgLq2IE7lKm4lixBvo0X4f6Erl6JdW6prqkrr83AypmGiwfnUCyCFXcoN_KfNbGCvUu5u6vHXp5/pub?output=csv',
+      'https://docs.google.com/spreadsheets/d/1WnxDDYCBhcXql9HOzusgs87ief0tVv4TbFLI_OBetGo/export?format=csv&gid=0'
+    ];
+    function updateCountdown() {
+      const targetDate = new Date('2027-02-02T00:00:00');
+      const timeLeft = targetDate - new Date();
+      if (timeLeft <= 0) {
+        ['days','hours','minutes','seconds'].forEach(id => document.getElementById(id).textContent = '00');
+        return;
+      }
+      document.getElementById('days').textContent    = String(Math.floor(timeLeft / 86400000)).padStart(2,'0');
+      document.getElementById('hours').textContent   = String(Math.floor((timeLeft % 86400000) / 3600000)).padStart(2,'0');
+      document.getElementById('minutes').textContent = String(Math.floor((timeLeft % 3600000) / 60000)).padStart(2,'0');
+      document.getElementById('seconds').textContent = String(Math.floor((timeLeft % 60000) / 1000)).padStart(2,'0');
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+    function loadDemoData() {
+      const demoData = [
+        { title: "📢 系統測試公告", content: "這是示範公告資料，用於測試系統功能是否正常運作。", date: "2026-09-08" },
+        { title: "🚧 工程進度通知", content: "本週工程進度順利，預計下週開始進行下一階段施工。", date: "2026-09-07" },
+        { title: "⚠️ 安全提醒", content: "請所有工作人員務必配戴安全帽和反光背心，注意工地安全。", date: "2026-09-06" }
+      ];
+      const container = document.getElementById('bulletin-entries');
+      container.innerHTML = '';
+      demoData.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'bulletin-entry';
+        div.innerHTML = `<div class="entry-title">${e.title}</div><div class="entry-content">${e.content}</div><div class="entry-date">${e.date}</div>`;
+        container.appendChild(div);
+      });
+      document.getElementById('debug-info').style.display = 'none';
+      document.getElementById('retry-btn').style.display = 'none';
+    }
+    async function fetchBulletinEntries() {
+      const container = document.getElementById('bulletin-entries');
+      const debugInfo = document.getElementById('debug-info');
+      const retryBtn  = document.getElementById('retry-btn');
+      container.innerHTML = '<div class="loading">載入公告中...</div>';
+      debugInfo.style.display = 'none';
+      retryBtn.style.display  = 'none';
+      for (let i = 0; i < CSV_URLS.length; i++) {
+        try {
+          const response = await fetch(CSV_URLS[i], { method: 'GET', mode: 'cors' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const csvText = await response.text();
+          if (csvText.length < 10) throw new Error('CSV 資料無效');
+          Papa.parse(csvText, {
+            complete(results) {
+              const entries = results.data.slice(1).filter(r => r.length > 0 && r[0]?.trim());
+              if (!entries.length) throw new Error('沒有有效公告資料');
+              displayEntries(entries);
+            },
+            error(err) { throw new Error(`CSV 解析錯誤: ${err.message}`); }
+          });
+          return;
+        } catch (err) {
+          if (i === CSV_URLS.length - 1) {
+            container.innerHTML = `<div class="error-message"><h3>🚨 公告載入失敗</h3><p>${err.message}</p></div>`;
+            debugInfo.innerHTML = `<strong>除錯資訊:</strong><br>• 錯誤: ${err.message}<br>• 時間: ${new Date().toLocaleString()}`;
+            debugInfo.style.display = 'block';
+            retryBtn.style.display  = 'inline-block';
+          }
+        }
+      }
+    }
+    function displayEntries(entries) {
+      const container = document.getElementById('bulletin-entries');
+      container.innerHTML = '';
+      entries.slice(0, 4).forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'bulletin-entry';
+        div.innerHTML = `
+          <div class="entry-title">${entry[3] || '📢'} ${entry[0] || '公告'}</div>
+          <div class="entry-content">${entry[1] || '暫無詳細內容'}</div>
+          <div class="entry-date">${entry[2] || ''}</div>`;
+        container.appendChild(div);
+      });
+    }
+    document.addEventListener('DOMContentLoaded', () => setTimeout(fetchBulletinEntries, 1000));
+  </script>
+</body>
+</html>

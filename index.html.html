@@ -3,101 +3,1125 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>南一處工務所</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <title>施工進度管理系統</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
-      min-height: 100vh;
+      font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
+      background: #e8eaf0;
+      padding: 15px;
+      font-size: 14px;
+    }
+
+    .header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px 25px;
+      margin-bottom: 20px;
+      border-left: 5px solid #e74c3c;
+    }
+
+    .header h1 {
+      font-size: 22px;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .header p {
+      opacity: 0.85;
+      font-size: 13px;
+    }
+
+    .header-controls {
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .logo-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 40px;
-    }
-    .logo-wrap img {
-      height: 70px;
-      margin-bottom: 12px;
-      filter: brightness(0) invert(1);
-    }
-    .logo-wrap h1 { color: white; font-size: 24px; font-weight: 700; letter-spacing: 2px; }
-    .logo-wrap p { color: rgba(255,255,255,0.75); font-size: 14px; margin-top: 6px; }
-    .card-container {
-      display: flex;
-      gap: 20px;
       flex-wrap: wrap;
-      justify-content: center;
-      width: 100%;
-      max-width: 700px;
+      gap: 10px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255,255,255,0.2);
     }
-    .entry-card {
-      background: white;
-      border-radius: 16px;
-      padding: 36px 28px;
-      width: 280px;
-      text-align: center;
-      text-decoration: none;
-      color: #333;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-      transition: transform 0.25s, box-shadow 0.25s;
+
+    .sync-status {
+      background: rgba(255,255,255,0.15);
+      padding: 6px 12px;
+      border-radius: 3px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sync-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2ecc71;
+    }
+
+    .lock-status {
+      background: rgba(255,255,255,0.15);
+      padding: 6px 12px;
+      border-radius: 3px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 3px;
+      font-size: 13px;
       cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: #3498db;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2980b9;
+    }
+
+    .btn-success {
+      background: #27ae60;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #229954;
+    }
+
+    .btn-warning {
+      background: #f39c12;
+      color: white;
+    }
+
+    .btn-warning:hover {
+      background: #e67e22;
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .building-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .building-tab {
+      padding: 15px;
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 3px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .building-tab:hover {
+      border-color: #3498db;
+    }
+
+    .building-tab.active {
+      background: #34495e;
+      color: white;
+      border-color: #34495e;
+    }
+
+    .building-tab .progress-text {
+      font-size: 20px;
+      margin-top: 5px;
+      font-weight: 700;
+    }
+
+    .controls {
+      background: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-left: 3px solid #3498db;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .controls label {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 13px;
+    }
+
+    .controls select, .controls input {
+      padding: 6px 12px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .controls select:focus, .controls input:focus {
+      border-color: #3498db;
+    }
+
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 15px;
+      border-left: 4px solid #3498db;
+    }
+
+    .stat-card h3 {
+      color: #7f8c8d;
+      font-size: 12px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .stat-card .number {
+      font-size: 28px;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #ecf0f1;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #3498db;
+      transition: width 0.3s;
+    }
+
+    .units-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .unit-card {
+      background: white;
+      padding: 15px;
+      border-left: 4px solid #95a5a6;
+      transition: all 0.2s;
+    }
+
+    .unit-card:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .unit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .unit-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .unit-progress {
+      font-size: 18px;
+      font-weight: 700;
+      color: #3498db;
+    }
+
+    .checklist {
+      list-style: none;
+    }
+
+    .checklist li {
+      padding: 10px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .checklist li:last-child {
+      border-bottom: none;
+    }
+
+    .item-row {
       display: flex;
       flex-direction: column;
+      gap: 6px;
+    }
+
+    .item-name {
+      font-weight: 500;
+      color: #34495e;
+      font-size: 13px;
+    }
+
+    .item-controls {
+      display: flex;
+      gap: 6px;
       align-items: center;
-      gap: 14px;
     }
-    .entry-card:hover { transform: translateY(-8px); box-shadow: 0 16px 40px rgba(0,0,0,0.25); }
-    .entry-card .icon-wrap {
-      width: 72px; height: 72px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
+
+    .percentage-select,
+    .inspection-select {
+      flex: 1;
+      padding: 5px 8px;
+      border: 1px solid #ddd;
+      border-radius: 2px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+      background: white;
     }
-    .entry-card.yawan .icon-wrap { background: linear-gradient(135deg, #1a73e8, #42a5f5); }
-    .entry-card.shengli .icon-wrap { background: linear-gradient(135deg, #3e9956, #66bb6a); }
-    .entry-card .icon-wrap i { font-size: 36px; color: white; }
-    .entry-card h2 { font-size: 22px; font-weight: 700; color: #222; }
-    .entry-card p { font-size: 13px; color: #888; line-height: 1.6; }
-    .entry-card .arrow {
-      margin-top: 6px; font-size: 13px; font-weight: 500;
-      display: flex; align-items: center; gap: 4px;
+
+    .percentage-select:focus,
+    .inspection-select:focus {
+      border-color: #3498db;
     }
-    .entry-card.yawan .arrow { color: #1a73e8; }
-    .entry-card.shengli .arrow { color: #3e9956; }
-    .footer { margin-top: 40px; color: rgba(255,255,255,0.5); font-size: 12px; }
-    @media (max-width: 600px) {
-      .entry-card { width: 100%; max-width: 340px; }
-      .logo-wrap h1 { font-size: 20px; }
+
+    .percentage-select.complete {
+      background: #d4edda;
+      border-color: #28a745;
+      color: #155724;
+    }
+
+    .percentage-select.progress {
+      background: #fff3cd;
+      border-color: #ffc107;
+      color: #856404;
+    }
+
+    .percentage-select.pending {
+      background: #f8d7da;
+      border-color: #dc3545;
+      color: #721c24;
+    }
+
+    .inspection-select.inspected {
+      background: #cfe2ff;
+      border-color: #0d6efd;
+      color: #084298;
+    }
+
+    .inspection-select.not-inspected {
+      background: #f8f9fa;
+      border-color: #adb5bd;
+      color: #6c757d;
+    }
+
+    .percentage-select:disabled,
+    .inspection-select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 2px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-complete {
+      background: #28a745;
+      color: white;
+    }
+
+    .status-progress {
+      background: #ffc107;
+      color: #000;
+    }
+
+    .status-pending {
+      background: #dc3545;
+      color: white;
+    }
+
+    .floor-section {
+      margin-bottom: 30px;
+    }
+
+    .floor-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      padding: 12px 15px;
+      background: white;
+      border-left: 5px solid #e74c3c;
+    }
+
+    .last-update {
+      font-size: 10px;
+      color: #95a5a6;
+      margin-top: 5px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.6);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 25px;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e74c3c;
+    }
+
+    .modal-header.success {
+      border-bottom-color: #27ae60;
+      color: #27ae60;
+    }
+
+    .modal-header h2 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .modal-body {
+      margin-bottom: 20px;
+    }
+
+    .modal-body p {
+      color: #555;
+      margin-bottom: 15px;
+      line-height: 1.6;
+      font-size: 13px;
+    }
+
+    .modal-body input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .modal-body input:focus {
+      border-color: #3498db;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .units-grid {
+        grid-template-columns: 1fr;
+      }
+      .building-tabs {
+        grid-template-columns: 1fr;
+      }
+      .item-controls {
+        flex-direction: column;
+      }
+      .percentage-select,
+      .inspection-select {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="logo-wrap">
-    <img src="https://i.postimg.cc/ZKWfsQD9/Logo-02-0.png" alt="Logo">
-    <h1>南一處工務所</h1>
-    <p>請選擇您要進入的工地</p>
+  <div class="header">
+    <h1>施工進度管理系統</h1>
+    <p>前鎮亞灣 夏公宅第一期新建統包工程</p>
+    <div class="header-controls">
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <div class="sync-status">
+          <div class="sync-indicator"></div>
+          <span id="syncStatus">已連線</span>
+        </div>
+        <div class="lock-status">
+          <span id="lockStatus">唯讀模式</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-warning" id="unlockBtn" onclick="showUnlockModal()">解除鎖定</button>
+        <button class="btn btn-danger" onclick="showPasswordModal()">初始化數據</button>
+        <button class="btn btn-primary" onclick="refreshData()">重新整理</button>
+      </div>
+    </div>
   </div>
-  <div class="card-container">
-    <a href="yawan.html" class="entry-card yawan">
-      <div class="icon-wrap"><i class="material-icons">domain</i></div>
-      <h2>亞灣工地</h2>
-      <p>亞灣社宅工程<br>施工組・品管組・行政組</p>
-      <div class="arrow"><span>進入</span><i class="material-icons" style="font-size:16px;">arrow_forward</i></div>
-    </a>
-    <a href="shengli.html" class="entry-card shengli">
-      <div class="icon-wrap"><i class="material-icons">apartment</i></div>
-      <h2>勝利安居</h2>
-      <p>勝利安居工程<br>施工組・品管組・職安組</p>
-      <div class="arrow"><span>進入</span><i class="material-icons" style="font-size:16px;">arrow_forward</i></div>
-    </a>
+
+  <!-- 初始化密碼對話框 -->
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>初始化確認</h2>
+      </div>
+      <div class="modal-body">
+        <p><strong>警告：此操作將清除所有現有數據！</strong></p>
+        <p>請輸入管理員密碼以繼續：</p>
+        <input type="password" id="passwordInput" placeholder="請輸入密碼" onkeypress="handlePasswordKeypress(event)">
+        <div class="error-message" id="errorMessage">密碼錯誤，請重試</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closePasswordModal()">取消</button>
+        <button class="btn btn-danger" onclick="verifyPassword()">確認初始化</button>
+      </div>
+    </div>
   </div>
-  <div class="footer">© 2026 南一處工務所</div>
+
+  <!-- 解鎖對話框 -->
+  <div id="unlockModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header success">
+        <h2>編輯權限驗證</h2>
+      </div>
+      <div class="modal-body">
+        <p>請輸入編輯密碼以解除鎖定：</p>
+        <input type="password" id="unlockPasswordInput" placeholder="請輸入編輯密碼" onkeypress="handleUnlockKeypress(event)">
+        <div class="error-message" id="unlockErrorMessage">密碼錯誤，請重試</div>
+        <p style="font-size: 11px; color: #7f8c8d; margin-top: 10px;">
+          提示：解鎖後 30 分鐘內可編輯，逾時自動鎖定
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeUnlockModal()">取消</button>
+        <button class="btn btn-success" onclick="verifyUnlock()">解除鎖定</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mainContent">
+    <div class="building-tabs">
+      <div class="building-tab active" data-building="A棟" onclick="switchBuilding('A棟')">
+        <div>A棟</div>
+        <div class="progress-text" id="progressA">0%</div>
+      </div>
+      <div class="building-tab" data-building="B棟" onclick="switchBuilding('B棟')">
+        <div>B棟</div>
+        <div class="progress-text" id="progressB">0%</div>
+      </div>
+      <div class="building-tab" data-building="C棟" onclick="switchBuilding('C棟')">
+        <div>C棟</div>
+        <div class="progress-text" id="progressC">0%</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <label for="floorFilter">樓層</label>
+      <select id="floorFilter" onchange="filterUnits()">
+        <option value="all">全部</option>
+        <option value="RF">RF</option>
+        <option value="14F">14F</option>
+        <option value="13F">13F</option>
+        <option value="12F">12F</option>
+        <option value="11F">11F</option>
+        <option value="10F">10F</option>
+        <option value="9F">9F</option>
+        <option value="8F">8F</option>
+        <option value="7F">7F</option>
+        <option value="6F">6F</option>
+        <option value="5F">5F</option>
+        <option value="4F">4F</option>
+        <option value="3F">3F</option>
+        <option value="2F">2F</option>
+        <option value="1F">1F</option>
+        <option value="B1F">B1F</option>
+      </select>
+
+      <label for="categoryFilter">項目類別</label>
+      <select id="categoryFilter" onchange="filterUnits()">
+        <option value="all">全部</option>
+        <option value="室內泥作">室內泥作</option>
+        <option value="油漆">油漆</option>
+        <option value="輕隔間">輕隔間</option>
+        <option value="防水工程">防水工程</option>
+        <option value="地坪">地坪</option>
+        <option value="門窗">門窗</option>
+        <option value="衛浴">衛浴</option>
+        <option value="外牆泥作">外牆泥作</option>
+        <option value="外牆塗料">外牆塗料</option>
+        <option value="雜項">雜項</option>
+        <option value="清潔">清潔</option>
+      </select>
+
+      <label for="statusFilter">狀態</label>
+      <select id="statusFilter" onchange="filterUnits()">
+        <option value="all">全部</option>
+        <option value="complete">已完成</option>
+        <option value="progress">進行中</option>
+        <option value="pending">未開始</option>
+      </select>
+
+      <label for="searchUnit">搜尋</label>
+      <input type="text" id="searchUnit" placeholder="輸入關鍵字..." onkeyup="filterUnits()">
+    </div>
+
+    <div class="stats-container">
+      <div class="stat-card">
+        <h3>完成率</h3>
+        <div class="number" id="currentProgress">0%</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="currentProgressBar"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <h3>已完成</h3>
+        <div class="number" id="completedItems">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>進行中</h3>
+        <div class="number" id="progressItems">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>總項目</h3>
+        <div class="number" id="totalItems">0</div>
+      </div>
+    </div>
+
+    <div id="unitsContainer"></div>
+  </div>
+
+  <script>
+    // 預設配置
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwJejVgtbQUUxJC8sYx2bC1k-nKUFkanrBswL2TSXUdCdCUT5Dn3SQQaulXcaScM7AW1Q/exec';
+    
+    // 管理員密碼（用於初始化）
+    const adminPassword = 'a03751';
+    
+    // 編輯密碼列表（可設定多組）
+    const editPasswords = [
+      'a00001',    // 密碼1
+      'a00002',    // 密碼2
+      'a00003',    // 密碼3
+      'edit123'    // 密碼4
+    ];
+    
+    let allData = [];
+    let currentBuilding = 'A棟';
+    let isUnlocked = false;
+    let unlockTimer = null;
+
+    window.onload = function() {
+      loadData();
+      setInterval(loadData, 30000);
+      checkUnlockStatus();
+    };
+
+    function showPasswordModal() {
+      document.getElementById('passwordModal').style.display = 'block';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('errorMessage').style.display = 'none';
+      setTimeout(() => {
+        document.getElementById('passwordInput').focus();
+      }, 100);
+    }
+
+    function closePasswordModal() {
+      document.getElementById('passwordModal').style.display = 'none';
+    }
+
+    function handlePasswordKeypress(event) {
+      if (event.key === 'Enter') {
+        verifyPassword();
+      }
+    }
+
+    function verifyPassword() {
+      const inputPassword = document.getElementById('passwordInput').value;
+      
+      if (inputPassword === adminPassword) {
+        closePasswordModal();
+        initializeData();
+      } else {
+        document.getElementById('errorMessage').style.display = 'block';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+      }
+    }
+
+    function showUnlockModal() {
+      if (isUnlocked) {
+        if (confirm('目前已解鎖，是否要重新鎖定？')) {
+          lockSystem();
+        }
+        return;
+      }
+      document.getElementById('unlockModal').style.display = 'block';
+      document.getElementById('unlockPasswordInput').value = '';
+      document.getElementById('unlockErrorMessage').style.display = 'none';
+      setTimeout(() => {
+        document.getElementById('unlockPasswordInput').focus();
+      }, 100);
+    }
+
+    function closeUnlockModal() {
+      document.getElementById('unlockModal').style.display = 'none';
+    }
+
+    function handleUnlockKeypress(event) {
+      if (event.key === 'Enter') {
+        verifyUnlock();
+      }
+    }
+
+    function verifyUnlock() {
+      const inputPassword = document.getElementById('unlockPasswordInput').value;
+      
+      // 檢查是否符合任一組編輯密碼
+      if (editPasswords.includes(inputPassword)) {
+        closeUnlockModal();
+        unlockSystem();
+      } else {
+        document.getElementById('unlockErrorMessage').style.display = 'block';
+        document.getElementById('unlockPasswordInput').value = '';
+        document.getElementById('unlockPasswordInput').focus();
+      }
+    }
+
+    function unlockSystem() {
+      isUnlocked = true;
+      const unlockTime = new Date().getTime();
+      localStorage.setItem('constructionUnlockTime', unlockTime);
+      
+      document.getElementById('lockStatus').textContent = '編輯模式';
+      document.getElementById('unlockBtn').textContent = '鎖定系統';
+      document.getElementById('unlockBtn').className = 'btn btn-danger';
+      
+      renderCurrentBuilding();
+      
+      if (unlockTimer) clearTimeout(unlockTimer);
+      unlockTimer = setTimeout(() => {
+        lockSystem();
+        alert('編輯時間已到，系統已自動鎖定');
+      }, 30 * 60 * 1000);
+    }
+
+    function lockSystem() {
+      isUnlocked = false;
+      localStorage.removeItem('constructionUnlockTime');
+      
+      document.getElementById('lockStatus').textContent = '唯讀模式';
+      document.getElementById('unlockBtn').textContent = '解除鎖定';
+      document.getElementById('unlockBtn').className = 'btn btn-warning';
+      
+      renderCurrentBuilding();
+      
+      if (unlockTimer) {
+        clearTimeout(unlockTimer);
+        unlockTimer = null;
+      }
+    }
+
+    function checkUnlockStatus() {
+      const unlockTime = localStorage.getItem('constructionUnlockTime');
+      if (unlockTime) {
+        const now = new Date().getTime();
+        const elapsed = now - parseInt(unlockTime);
+        if (elapsed < 30 * 60 * 1000) {
+          isUnlocked = true;
+          document.getElementById('lockStatus').textContent = '編輯模式';
+          document.getElementById('unlockBtn').textContent = '鎖定系統';
+          document.getElementById('unlockBtn').className = 'btn btn-danger';
+          
+          const remaining = 30 * 60 * 1000 - elapsed;
+          unlockTimer = setTimeout(() => {
+            lockSystem();
+            alert('編輯時間已到，系統已自動鎖定');
+          }, remaining);
+        } else {
+          lockSystem();
+        }
+      }
+    }
+
+    async function loadData() {
+      try {
+        document.getElementById('syncStatus').textContent = '同步中...';
+        
+        const response = await fetch(scriptUrl);
+        const result = await response.json();
+        
+        if (result.success) {
+          allData = result.data;
+          updateBuildingProgress();
+          renderCurrentBuilding();
+          document.getElementById('syncStatus').textContent = '已同步 ' + new Date().toLocaleTimeString();
+        }
+      } catch (error) {
+        console.error('載入錯誤:', error);
+        document.getElementById('syncStatus').textContent = '同步失敗';
+      }
+    }
+
+    async function initializeData() {
+      try {
+        document.getElementById('syncStatus').textContent = '初始化中...';
+        
+        const response = await fetch(scriptUrl, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'initialize' })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          alert('初始化成功：' + result.message);
+          loadData();
+        } else {
+          alert('初始化失敗：' + result.error);
+        }
+      } catch (error) {
+        alert('初始化失敗：' + error);
+      }
+    }
+
+    function switchBuilding(building) {
+      currentBuilding = building;
+      document.querySelectorAll('.building-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelector(`[data-building="${building}"]`).classList.add('active');
+      renderCurrentBuilding();
+    }
+
+    function updateBuildingProgress() {
+      ['A棟', 'B棟', 'C棟'].forEach(building => {
+        const buildingData = allData.filter(d => d['棟別'] === building);
+        const total = buildingData.reduce((sum, item) => {
+          return sum + (parseFloat(item['完成百分比']) || 0);
+        }, 0);
+        const avg = buildingData.length > 0 ? Math.round(total / buildingData.length) : 0;
+        
+        const id = building.charAt(0);
+        document.getElementById(`progress${id}`).textContent = avg + '%';
+      });
+    }
+
+    function getPercentageClass(percentage) {
+      if (percentage === 100) return 'complete';
+      if (percentage > 0) return 'progress';
+      return 'pending';
+    }
+
+    function getInspectionClass(inspectionStatus) {
+      if (inspectionStatus && inspectionStatus.includes('已查驗')) return 'inspected';
+      return 'not-inspected';
+    }
+
+    function renderCurrentBuilding() {
+      const floorFilter = document.getElementById('floorFilter').value;
+      const categoryFilter = document.getElementById('categoryFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+      
+      let filteredData = allData.filter(d => d['棟別'] === currentBuilding);
+      
+      if (floorFilter !== 'all') {
+        filteredData = filteredData.filter(d => d['樓層'] === floorFilter);
+      }
+      
+      if (categoryFilter !== 'all') {
+        filteredData = filteredData.filter(d => d['項目類別'] === categoryFilter);
+      }
+
+      const groupedByFloor = {};
+      filteredData.forEach(item => {
+        const floor = item['樓層'];
+        if (!groupedByFloor[floor]) groupedByFloor[floor] = {};
+        
+        const category = item['項目類別'];
+        if (!groupedByFloor[floor][category]) groupedByFloor[floor][category] = [];
+        
+        groupedByFloor[floor][category].push(item);
+      });
+
+      const container = document.getElementById('unitsContainer');
+      container.innerHTML = '';
+
+      const floors = ['RF', '14F', '13F', '12F', '11F', '10F', '9F', '8F', '7F', '6F', '5F', '4F', '3F', '2F', '1F', 'B1F'];
+      
+      floors.forEach(floor => {
+        if (!groupedByFloor[floor]) return;
+
+        const floorSection = document.createElement('div');
+        floorSection.className = 'floor-section';
+        floorSection.innerHTML = `<div class="floor-title">${floor}</div>`;
+
+        const unitsGrid = document.createElement('div');
+        unitsGrid.className = 'units-grid';
+
+        Object.keys(groupedByFloor[floor]).forEach(category => {
+          const items = groupedByFloor[floor][category];
+          const totalPercentage = items.reduce((sum, item) => sum + parseFloat(item['完成百分比'] || 0), 0);
+          const avgProgress = Math.round(totalPercentage / items.length);
+          const status = avgProgress === 100 ? 'complete' : avgProgress > 0 ? 'progress' : 'pending';
+          
+          if (statusFilter !== 'all' && status !== statusFilter) return;
+
+          const statusClass = `status-${status}`;
+          const statusText = status === 'complete' ? '已完成' : status === 'progress' ? '進行中' : '未開始';
+
+          const unitCard = document.createElement('div');
+          unitCard.className = 'unit-card';
+          unitCard.dataset.floor = floor;
+          unitCard.dataset.status = status;
+          unitCard.dataset.category = category;
+
+          let checklistHtml = '';
+          items.forEach((item, i) => {
+            const percentage = parseFloat(item['完成百分比']) || 0;
+            const percentClass = getPercentageClass(percentage);
+            const inspectionStatus = item['查驗狀態'] || '';
+            const inspectionClass = getInspectionClass(inspectionStatus);
+            const inspectionValue = inspectionStatus.includes('已查驗') ? 'inspected' : 'not-inspected';
+            
+            const selectId = `select-${floor}-${category}-${i}`;
+            const inspectionId = `inspection-${floor}-${category}-${i}`;
+            
+            const itemName = item['項目名稱'];
+            const disabled = !isUnlocked ? 'disabled' : '';
+            
+            checklistHtml += `
+              <li>
+                <div class="item-row">
+                  <div class="item-name">${itemName}</div>
+                  <div class="item-controls">
+                    <select id="${selectId}" 
+                      class="percentage-select ${percentClass}"
+                      onchange="updateItemPercentage('${currentBuilding}', '${floor}', '${itemName}', this.value)"
+                      ${disabled}>
+                      <option value="0" ${percentage === 0 ? 'selected' : ''}>0%</option>
+                      <option value="20" ${percentage === 20 ? 'selected' : ''}>20%</option>
+                      <option value="40" ${percentage === 40 ? 'selected' : ''}>40%</option>
+                      <option value="60" ${percentage === 60 ? 'selected' : ''}>60%</option>
+                      <option value="80" ${percentage === 80 ? 'selected' : ''}>80%</option>
+                      <option value="100" ${percentage === 100 ? 'selected' : ''}>100%</option>
+                    </select>
+                    <select id="${inspectionId}"
+                      class="inspection-select ${inspectionClass}"
+                      onchange="updateInspectionStatus('${currentBuilding}', '${floor}', '${itemName}', this.value)"
+                      ${disabled}>
+                      <option value="not-inspected" ${inspectionValue === 'not-inspected' ? 'selected' : ''}>未查驗</option>
+                      <option value="inspected" ${inspectionValue === 'inspected' ? 'selected' : ''}>已查驗</option>
+                    </select>
+                  </div>
+                </div>
+              </li>
+            `;
+          });
+
+          const lastUpdate = items[0]['更新時間'] || '';
+
+          unitCard.innerHTML = `
+            <div class="unit-header">
+              <div>
+                <div class="unit-title">${category}</div>
+                <span class="status-badge ${statusClass}">${statusText}</span>
+                ${lastUpdate ? `<div class="last-update">${lastUpdate}</div>` : ''}
+              </div>
+              <div class="unit-progress">${avgProgress}%</div>
+            </div>
+            <ul class="checklist">
+              ${checklistHtml}
+            </ul>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${avgProgress}%"></div>
+            </div>
+          `;
+
+          unitsGrid.appendChild(unitCard);
+        });
+
+        floorSection.appendChild(unitsGrid);
+        container.appendChild(floorSection);
+      });
+
+      updateStats(filteredData);
+    }
+
+    async function updateItemPercentage(building, floor, itemName, percentage) {
+      if (!isUnlocked) {
+        alert('系統已鎖定，請先解除鎖定才能編輯');
+        renderCurrentBuilding();
+        return;
+      }
+
+      try {
+        const percentValue = parseInt(percentage);
+        
+        const response = await fetch(scriptUrl, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'update',
+            building: building,
+            floor: floor,
+            itemName: itemName,
+            percentage: percentValue
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          const item = allData.find(d => 
+            d['棟別'] === building && 
+            d['樓層'] === floor && 
+            d['項目名稱'] === itemName
+          );
+          if (item) {
+            item['完成百分比'] = percentValue;
+            item['更新時間'] = new Date().toLocaleString('zh-TW');
+          }
+          updateBuildingProgress();
+          renderCurrentBuilding();
+        } else {
+          alert('更新失敗：' + result.error);
+        }
+      } catch (error) {
+        console.error('更新錯誤:', error);
+        alert('更新失敗：' + error);
+      }
+    }
+
+    async function updateInspectionStatus(building, floor, itemName, status) {
+      if (!isUnlocked) {
+        alert('系統已鎖定，請先解除鎖定才能編輯');
+        renderCurrentBuilding();
+        return;
+      }
+
+      try {
+        const inspectionStatus = status === 'inspected' ? '已查驗' : '';
+        
+        const response = await fetch(scriptUrl, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'updateRemark',
+            building: building,
+            floor: floor,
+            itemName: itemName,
+            remark: inspectionStatus
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          const item = allData.find(d => 
+            d['棟別'] === building && 
+            d['樓層'] === floor && 
+            d['項目名稱'] === itemName
+          );
+          if (item) {
+            item['查驗狀態'] = inspectionStatus;
+            item['更新時間'] = new Date().toLocaleString('zh-TW');
+          }
+          renderCurrentBuilding();
+        } else {
+          alert('更新查驗狀態失敗：' + result.error);
+        }
+      } catch (error) {
+        console.error('更新查驗狀態錯誤:', error);
+        alert('更新查驗狀態失敗：' + error);
+      }
+    }
+
+    function updateStats(data) {
+      const completed = data.filter(item => parseFloat(item['完成百分比']) === 100).length;
+      const progress = data.filter(item => {
+        const p = parseFloat(item['完成百分比']);
+        return p > 0 && p < 100;
+      }).length;
+
+      const total = data.reduce((sum, item) => sum + parseFloat(item['完成百分比'] || 0), 0);
+      const avg = data.length > 0 ? Math.round(total / data.length) : 0;
+
+      document.getElementById('currentProgress').textContent = avg + '%';
+      document.getElementById('currentProgressBar').style.width = avg + '%';
+      document.getElementById('completedItems').textContent = completed;
+      document.getElementById('progressItems').textContent = progress;
+      document.getElementById('totalItems').textContent = data.length;
+    }
+
+    function filterUnits() {
+      renderCurrentBuilding();
+    }
+
+    function refreshData() {
+      loadData();
+    }
+
+    window.onclick = function(event) {
+      const passwordModal = document.getElementById('passwordModal');
+      const unlockModal = document.getElementById('unlockModal');
+      if (event.target === passwordModal) {
+        closePasswordModal();
+      }
+      if (event.target === unlockModal) {
+        closeUnlockModal();
+      }
+    }
+  </script>
 </body>
 </html>
